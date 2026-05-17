@@ -11,7 +11,9 @@ MIMO Chat - 非官方小米 MiMo 大模型 Android 客户端
 > 基于 Kotlin 开发的安卓客户端，快速接入小米 MIMO 系列大模型 API，支持 LaTeX 渲染、自定义提示词与大模型技能等功能
 
 > [!TIP]
-> 若你正在使用小米 [百万亿 token 创造者激励计划](https://100t.xiaomimimo.com/) 所赠送的 Token，请在设置中将 API Base URL 更改为订阅接口
+> 若你正在使用小米 [百万亿 token 创造者激励计划](https://100t.xiaomimimo.com/) 所赠送的 Token，请在设置中**将 API Base URL 更改为订阅接口**
+
+![MIMO](https://img.shields.io/badge/MIMO-控制台-FF7E00?style=flat-square&logo=xiaomi&logoColor=white)
 
 ---
 
