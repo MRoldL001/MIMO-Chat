@@ -22,7 +22,7 @@ MIMO Chat - 非官方小米 MiMo 大模型 Android 客户端
 ![Compose BOM](https://img.shields.io/badge/Compose%20BOM-2023.08.00-4285F4?style=flat-square&logo=jetpackcompose&logoColor=white)
 ![Target API](https://img.shields.io/badge/Target%20API-34%20%28Android%2014%29-3DDC84?style=flat-square&logo=android&logoColor=white)
 ![Retrofit](https://img.shields.io/badge/Retrofit-009688?style=flat-square&logo=android&logoColor=white)
-![Hilt](https://img.shields.io/badge/Hilt-lCB1B45?style=flat-square&logo=android&logoColor=white)
+![Hilt](https://img.shields.io/badge/Hilt-CB1B45?style=flat-square&logo=android&logoColor=white)
 ![Room](https://img.shields.io/badge/Room-A4C639?style=flat-square&logo=android&logoColor=white)
 
 ---
