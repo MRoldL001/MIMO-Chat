@@ -216,13 +216,14 @@ fun MIMOChatTheme(
                     onBackground = Color(0xFFE6E1E5),
                     surface = Color(0xFF1C1B1F),
                     onSurface = Color(0xFFE6E1E5),
-                    surfaceVariant = Color(0xFF49454F),
+                    surfaceVariant = calculateSurfaceVariantColor(brightPrimary, false),
                     onSurfaceVariant = Color(0xFFCAC4D0)
                 )
             } else {
                 lightScheme.copy(
                     primaryContainer = calculateLightContainerColor(lightScheme.primary),
-                    onPrimaryContainer = Color(0xFF000000)
+                    onPrimaryContainer = Color(0xFF000000),
+                    surfaceVariant = calculateSurfaceVariantColor(lightScheme.primary, true)
                 )
             }
         }
