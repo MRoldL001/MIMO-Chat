@@ -11,6 +11,7 @@ MIMO Chat - 非官方小米 MiMo 大模型 Android 客户端
 
 > [!NOTE]
 > An Android client built with Kotlin that provides quick integration with the Xiaomi MiMo series Large Model APIs. Features include LaTeX rendering, custom prompts, 和 large model skills
+> 
 > 基于 Kotlin 开发的安卓客户端，快速接入小米 MiMo 系列大模型 API，支持 LaTeX 渲染、自定义提示词与大模型技能等功能
 
 > [!TIP]
