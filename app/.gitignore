@@ -1,0 +1,8 @@
+/build
+/release
+*.apk
+*.aar
+*.ap_
+*.aab
+*.dex
+*.class
