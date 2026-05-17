@@ -18,7 +18,7 @@ MIMO Chat - 非官方小米 MiMo 大模型 Android 客户端
 > 若你正在使用小米 [百万亿 Token 创造者激励计划](https://100t.xiaomimimo.com/) 所赠送的 Token，请在设置中**将 API Base URL 更改为订阅接口**
 
 ![Kotlin](https://img.shields.io/badge/Kotlin-1.9.0-7F52FF?style=flat-square&logo=kotlin&logoColor=white)
-![Gradle](https://img.shields.io/badge/Gradle-8.2-02303A?style=flat-square&logo=gradle&logoColor=white)
+![Gradle](https://img.shields.io/badge/Gradle-8.2.0-02303A?style=flat-square&logo=gradle&logoColor=white)
 ![Compose BOM](https://img.shields.io/badge/Compose%20BOM-2023.08.00-4285F4?style=flat-square&logo=jetpackcompose&logoColor=white)
 ![Target API](https://img.shields.io/badge/Target%20API-34%20%28Android%2014%29-3DDC84?style=flat-square&logo=android&logoColor=white)
 ![Retrofit](https://img.shields.io/badge/Retrofit-009688?style=flat-square&logo=android&logoColor=white)
