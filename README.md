@@ -11,7 +11,7 @@ MIMO Chat - 非官方小米 MiMo 大模型 Android 客户端
 > 基于 Kotlin 开发的安卓客户端，快速接入小米 MiMo 系列大模型 API，支持 LaTeX 渲染、自定义提示词与大模型技能等功能
 
 > [!TIP]
-> 若你正在使用小米 [百万亿 token 创造者激励计划](https://100t.xiaomimimo.com/) 所赠送的 Token，请在设置中**将 API Base URL 更改为订阅接口**
+> 若你正在使用小米 [百万亿 Token 创造者激励计划](https://100t.xiaomimimo.com/) 所赠送的 Token，请在设置中**将 API Base URL 更改为订阅接口**
 
 ![Target API](https://img.shields.io/badge/Target%20API-34%20%28Android%2014%29-3DDC84?style=flat-square&logo=android&logoColor=white)
 ![Kotlin](https://img.shields.io/badge/Kotlin-1.9.0-7F52FF?style=flat-square&logo=kotlin&logoColor=white)
@@ -20,7 +20,7 @@ MIMO Chat - 非官方小米 MiMo 大模型 Android 客户端
 ![Retrofit](https://img.shields.io/badge/Retrofit-2.9.0-009688?style=flat-square&logo=square&logoColor=white)
 ![Room](https://img.shields.io/badge/Room-2.5.2-3DDC84?style=flat-square&logo=android&logoColor=white)
 [![MIMO](https://img.shields.io/badge/MiMo-控制台-FF7E00?style=flat-square&logo=xiaomi&logoColor=white)](https://platform.xiaomimimo.com/console/balance)
-[![100T](https://img.shields.io/badge/MiMo-百万亿Token创造者激励计划 -FF7E00?style=flat-square&logo=xiaomi&logoColor=white)]([https://platform.xiaomimimo.com/console/balance](https://100t.xiaomimimo.com/))
+[![100T](https://img.shields.io/badge/MiMo-百万亿 Token 创造者激励计划 -FF7E00?style=flat-square&logo=xiaomi&logoColor=white)](https://100t.xiaomimimo.com/))
 
 ---
 
