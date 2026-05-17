@@ -20,10 +20,10 @@ MIMO Chat - 非官方小米 MiMo 大模型 Android 客户端
 ![Kotlin](https://img.shields.io/badge/Kotlin-1.9.0-7F52FF?style=flat-square&logo=kotlin&logoColor=white)
 ![Gradle](https://img.shields.io/badge/Gradle-8.2-02303A?style=flat-square&logo=gradle&logoColor=white)
 ![Compose BOM](https://img.shields.io/badge/Compose%20BOM-2023.08.00-4285F4?style=flat-square&logo=jetpackcompose&logoColor=white)
-![Retrofit](https://img.shields.io/badge/Retrofit-2.9.0-009688?style=flat-square&logo=square&logoColor=white)
+![Retrofit](https://img.shields.io/badge/Retrofit-009688?style=flat-square&logo=square&logoColor=white)
+![Hilt](https://img.shields.io/badge/Hilt-4285F4?style=flat-square&logo=android&logoColor=white)
+![Room](https://img.shields.io/badge/Room-A4C639?style=flat-square&logo=android&logoColor=white)
 ![Target API](https://img.shields.io/badge/Target%20API-34%20%28Android%2014%29-3DDC84?style=flat-square&logo=android&logoColor=white)
-![Hilt](https://img.shields.io/badge/Hilt-2.48-4285F4?style=flat-square&logo=android&logoColor=white)
-![Room](https://img.shields.io/badge/Room-2.5.2-A4C639?style=flat-square&logo=android&logoColor=white)
 
 ---
 
