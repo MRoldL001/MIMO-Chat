@@ -1,5 +1,5 @@
 <div align="center" style="display: flex; justify-content: center; align-items: center; gap: 20px;">
-  <img src="mimo-title.jpg" alt="LOGO" width="300">
+  <img src="mimo-title.jpg" alt="LOGO" width="325">
 </div>
 
 <br/>
