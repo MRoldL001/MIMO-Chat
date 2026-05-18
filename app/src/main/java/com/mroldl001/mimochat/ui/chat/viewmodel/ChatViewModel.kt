@@ -331,7 +331,7 @@ class ChatViewModel @Inject constructor(
             streamingReasoning.value = ""
             isStreaming.value = true
 
-            val contextMessages = messages.filter { !it.isAborted }.toList()
+            val contextMessages = messages.filter { !it.isAborted && !it.isFailed }.toList()
 
             val contentBuffer = mutableListOf<String>()
             val reasoningBuffer = mutableListOf<String>()
@@ -410,6 +410,18 @@ class ChatViewModel @Inject constructor(
 
                 val error = streamError
                 if (error != null) {
+                    // Mark last user message as failed
+                    val lastUserIndex = messages.indexOfLast { it.role == "user" }
+                    if (lastUserIndex >= 0) {
+                        val lastUserMessage = messages[lastUserIndex]
+                        if (!lastUserMessage.isFailed) {
+                            val failedUserMessage = lastUserMessage.copy(isFailed = true)
+                            messages[lastUserIndex] = failedUserMessage
+                            viewModelScope.launch {
+                                chatRepository.updateMessage(failedUserMessage)
+                            }
+                        }
+                    }
                     _uiState.update {
                         it.copy(
                             isLoading = false,

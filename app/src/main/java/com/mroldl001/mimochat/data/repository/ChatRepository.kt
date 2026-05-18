@@ -397,7 +397,8 @@ class ChatRepository @Inject constructor(
         reasoningContent = reasoningContent,
         timestamp = timestamp,
         isStreaming = isStreaming,
-        isAborted = isAborted
+        isAborted = isAborted,
+        isFailed = isFailed
     )
 
     private fun Message.toEntity() = MessageEntity(
@@ -408,7 +409,8 @@ class ChatRepository @Inject constructor(
         reasoningContent = reasoningContent,
         timestamp = timestamp,
         isStreaming = isStreaming,
-        isAborted = isAborted
+        isAborted = isAborted,
+        isFailed = isFailed
     )
 }
 

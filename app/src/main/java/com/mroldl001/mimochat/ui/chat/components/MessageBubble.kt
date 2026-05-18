@@ -4,15 +4,15 @@ import android.graphics.drawable.GradientDrawable
 import android.widget.TextView
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.mroldl001.mimochat.domain.model.Message
 import java.text.SimpleDateFormat
@@ -34,70 +34,86 @@ fun MessageBubble(
             .padding(horizontal = 16.dp, vertical = 4.dp),
         horizontalAlignment = alignment
     ) {
-        if (isUser) {
-            val context = LocalContext.current
-            val textColor = MaterialTheme.colorScheme.onPrimaryContainer
-            val bgColor = MaterialTheme.colorScheme.primaryContainer
-            val density = context.resources.displayMetrics.density
-            SelectionContainer {
-                AndroidView(
-                    factory = { ctx ->
-                        val drawable = GradientDrawable().apply {
-                            cornerRadii = floatArrayOf(
-                                16 * density, 16 * density,
-                                4 * density, 4 * density,
-                                16 * density, 16 * density,
-                                16 * density, 16 * density
-                            )
-                            setColor(bgColor.toArgb())
-                        }
-                        TextView(ctx).apply {
-                            textSize = 15f
-                            setTextColor(textColor.toArgb())
-                            this.text = message.content
-                            setTextIsSelectable(true)
-                            isClickable = false
-                            isLongClickable = true
-                            setPadding(
-                                (12 * density).toInt(),
-                                (8 * density).toInt(),
-                                (12 * density).toInt(),
-                                (8 * density).toInt()
-                            )
-                            background = drawable
-                            isFocusable = true
-                        }
-                    },
-                    update = { textView ->
-                        textView.text = message.content
-                    },
-                    modifier = Modifier
-                        .widthIn(max = 320.dp)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
+        ) {
+            if (isUser && message.isFailed) {
+                Icon(
+                    imageVector = Icons.Outlined.ErrorOutline,
+                    contentDescription = "发送失败",
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(20.dp)
                 )
+                Spacer(modifier = Modifier.width(4.dp))
             }
-        } else {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.Start
-            ) {
-                if (hasThinking) {
-                    ThinkingCard(
-                        reasoningContent = message.reasoningContent!!,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                }
+            if (isUser) {
+                val context = LocalContext.current
+                val density = remember { context.resources.displayMetrics.density }
+                val textColor = MaterialTheme.colorScheme.onPrimaryContainer
+                val bgColor = MaterialTheme.colorScheme.primaryContainer
 
-                if (message.content.isNotBlank()) {
-                    MixedMarkdownLatex(
-                        text = message.content,
-                        textColor = MaterialTheme.colorScheme.onSurface
-                    )
+                key(textColor, bgColor, message.content) {
+                    SelectionContainer {
+                        AndroidView(
+                            factory = { ctx ->
+                                val drawable = GradientDrawable().apply {
+                                    cornerRadii = floatArrayOf(
+                                        16 * density, 16 * density,
+                                        4 * density, 4 * density,
+                                        16 * density, 16 * density,
+                                        16 * density, 16 * density
+                                    )
+                                    setColor(bgColor.toArgb())
+                                }
+                                TextView(ctx).apply {
+                                    textSize = 15f
+                                    setTextColor(textColor.toArgb())
+                                    setTextIsSelectable(true)
+                                    isClickable = false
+                                    isLongClickable = true
+                                    setPadding(
+                                        (12 * density).toInt(),
+                                        (8 * density).toInt(),
+                                        (12 * density).toInt(),
+                                        (8 * density).toInt()
+                                    )
+                                    background = drawable
+                                    isFocusable = true
+                                }
+                            },
+                            update = { textView ->
+                                textView.text = message.content
+                            },
+                            modifier = Modifier
+                                .widthIn(max = 320.dp)
+                        )
+                    }
                 }
+            } else {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.Start
+                ) {
+                    if (hasThinking) {
+                        ThinkingCard(
+                            reasoningContent = message.reasoningContent!!,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                    }
 
-                if (message.isStreaming && message.content.isNotBlank()) {
-                    StreamingIndicator(
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
+                    if (message.content.isNotBlank()) {
+                        MixedMarkdownLatex(
+                            text = message.content,
+                            textColor = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+
+                    if (message.isStreaming && message.content.isNotBlank()) {
+                        StreamingIndicator(
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
                 }
             }
         }

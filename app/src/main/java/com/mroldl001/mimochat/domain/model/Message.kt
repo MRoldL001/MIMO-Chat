@@ -8,5 +8,6 @@ data class Message(
     val reasoningContent: String? = null,
     val timestamp: Long = System.currentTimeMillis(),
     val isStreaming: Boolean = false,
-    val isAborted: Boolean = false
+    val isAborted: Boolean = false,
+    val isFailed: Boolean = false
 )

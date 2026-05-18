@@ -181,20 +181,20 @@ fun ThinkingCard(
                 Icon(
                     imageVector = Icons.Default.Psychology,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.secondary,
+                    tint = Color(0xFFB0B0B0),
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     text = "思考过程",
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.secondary
+                    color = Color(0xFFB0B0B0)
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Icon(
                     imageVector = Icons.Default.ArrowDropDown,
                     contentDescription = if (isExpanded) "收起" else "展开",
-                    tint = MaterialTheme.colorScheme.secondary,
+                    tint = Color(0xFFB0B0B0),
                     modifier = Modifier
                         .size(18.dp)
                         .rotate(rotation)
