@@ -6,8 +6,6 @@
 
 MIMO Chat - 第三方小米 MiMo 大模型 Android 客户端
 
----
-
 [![MiMo](https://img.shields.io/badge/MiMo-console-FF7E00?style=for-the-badge&logo=xiaomi&logoColor=white)](https://platform.xiaomimimo.com/console/balance)
 [![100T](https://img.shields.io/badge/MiMo-100T%20Toke%20Grant%20for%20Builders-FF7E00?style=for-the-badge&logo=xiaomi&logoColor=white)](https://100t.xiaomimimo.com/)
 
