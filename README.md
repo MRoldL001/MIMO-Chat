@@ -46,16 +46,16 @@ MIMO Chat - 第三方小米 MiMo 大模型 Android 客户端
 
 #### 方式一：从 GitHub Releases 下载（推荐）
 
-1. 访问 [GitHub Releases](https://github.com/MRoldL001/MIMO-Chat/releases)
-2. 下载最新的 APK 文件
+1. 访问本项目的 [Releases](https://github.com/MRoldL001/MIMO-Chat/releases)
+2. 下载最新的 `.apk` 文件
 3. 在手机上安装（可能需要允许未知来源应用）
 
 #### 方式二：从源码构建
 
-1. 克隆仓库
-2. 使用 Android Studio 打开项目
-3. 同步 Gradle
-4. 运行或构建 APK
+1. 使用 `git clone` 将 Repo 克隆到本地
+2. 使用 `Android Studio` 或者其它装了 Android 插件的`Jetbrains IDE` 打开项目
+3. 同步 `Gradle`
+4. 运行或构建 `.apk`
 
 ### 配置
 
