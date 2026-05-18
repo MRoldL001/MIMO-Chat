@@ -27,7 +27,7 @@ MIMO Chat - 第三方小米 MiMo 大模型 Android 客户端
 > [!TIP]
 > **关于通知栏保活功能的说明**
 >
-> 部分厂商定制系统会限制非应用商店下载应用的通知权限。为保障网络连接的稳定性，请自行前往设置中**确认已开启本应用的通知权限**
+> 部分厂商定制系统会限制非应用商店下载应用的通知权限。为保障服务的稳定性，请自行前往设置中**确认已开启本应用的通知权限**，本应用不会自行弹窗提醒用户开启通知，用户具有选择权。
 
 ![Kotlin](https://img.shields.io/badge/Kotlin-1.9.0-7F52FF?style=flat-square&logo=kotlin&logoColor=white)
 ![Gradle](https://img.shields.io/badge/Gradle-8.2.0-02303A?style=flat-square&logo=gradle&logoColor=white)
