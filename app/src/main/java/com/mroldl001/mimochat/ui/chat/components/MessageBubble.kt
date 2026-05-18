@@ -1,14 +1,19 @@
 package com.mroldl001.mimochat.ui.chat.components
 
-import androidx.compose.foundation.background
+import android.graphics.drawable.GradientDrawable
+import android.widget.TextView
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import com.mroldl001.mimochat.domain.model.Message
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -30,22 +35,44 @@ fun MessageBubble(
         horizontalAlignment = alignment
     ) {
         if (isUser) {
-            Box(
-                modifier = Modifier
-                    .widthIn(max = 320.dp)
-                    .background(
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp, 4.dp, 16.dp, 16.dp)
-                    )
-                    .padding(12.dp)
-            ) {
-                Text(
-                    text = message.content,
-                    style = TextStyle(
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        fontSize = 15.sp,
-                        lineHeight = 22.sp
-                    )
+            val context = LocalContext.current
+            val textColor = MaterialTheme.colorScheme.onPrimaryContainer
+            val bgColor = MaterialTheme.colorScheme.primaryContainer
+            val density = context.resources.displayMetrics.density
+            SelectionContainer {
+                AndroidView(
+                    factory = { ctx ->
+                        val drawable = GradientDrawable().apply {
+                            cornerRadii = floatArrayOf(
+                                16 * density, 16 * density,
+                                4 * density, 4 * density,
+                                16 * density, 16 * density,
+                                16 * density, 16 * density
+                            )
+                            setColor(bgColor.toArgb())
+                        }
+                        TextView(ctx).apply {
+                            textSize = 15f
+                            setTextColor(textColor.toArgb())
+                            this.text = message.content
+                            setTextIsSelectable(true)
+                            isClickable = false
+                            isLongClickable = true
+                            setPadding(
+                                (12 * density).toInt(),
+                                (8 * density).toInt(),
+                                (12 * density).toInt(),
+                                (8 * density).toInt()
+                            )
+                            background = drawable
+                            isFocusable = true
+                        }
+                    },
+                    update = { textView ->
+                        textView.text = message.content
+                    },
+                    modifier = Modifier
+                        .widthIn(max = 320.dp)
                 )
             }
         } else {

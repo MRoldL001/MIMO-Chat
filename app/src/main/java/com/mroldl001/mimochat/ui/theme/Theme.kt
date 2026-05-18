@@ -18,6 +18,10 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 
+fun supportsDynamicColor(): Boolean {
+    return Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+}
+
 enum class ThemeColor {
     WHITE,
     HATSUNE_MIKU,

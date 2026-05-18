@@ -1,5 +1,7 @@
 package com.mroldl001.mimochat.ui.chat.viewmodel
 
+import android.app.Application
+import android.content.Intent
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -11,6 +13,7 @@ import com.mroldl001.mimochat.data.repository.StreamEvent
 import com.mroldl001.mimochat.domain.model.AIModel
 import com.mroldl001.mimochat.domain.model.Chat
 import com.mroldl001.mimochat.domain.model.Message
+import com.mroldl001.mimochat.service.ChatService
 import com.mroldl001.mimochat.ui.theme.ThemeColor
 import com.mroldl001.mimochat.ui.theme.ThemeMode
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -94,7 +97,8 @@ private const val DEFAULT_CHAT_TITLE = "新对话"
 class ChatViewModel @Inject constructor(
     private val chatRepository: ChatRepository,
     private val modelRepository: ModelRepository,
-    private val preferencesManager: PreferencesManager
+    private val preferencesManager: PreferencesManager,
+    private val application: Application
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
@@ -338,6 +342,11 @@ class ChatViewModel @Inject constructor(
             val skillPrompt = activeSkill?.let { SkillPrompts.getSkillPrompt(it) } ?: ""
             val effectiveThinkingEnabled = if (activeSkill != null) false else thinkingEnabled
 
+            val serviceIntent = Intent(application, ChatService::class.java).apply {
+                action = ChatService.ACTION_START
+            }
+            application.startForegroundService(serviceIntent)
+
             streamJob = viewModelScope.launch {
                 chatRepository.sendMessageStream(
                     apiKey = apiKey,
@@ -418,6 +427,11 @@ class ChatViewModel @Inject constructor(
                     chatRepository.saveMessage(finalMessage)
                     _uiState.update { it.copy(isLoading = false) }
                 }
+
+                val stopIntent = Intent(application, ChatService::class.java).apply {
+                    action = ChatService.ACTION_STOP
+                }
+                application.startService(stopIntent)
             }
         }
     }
@@ -460,6 +474,11 @@ class ChatViewModel @Inject constructor(
         streamingContent.value = ""
         streamingReasoning.value = ""
         _uiState.update { it.copy(isLoading = false) }
+
+        val stopIntent = Intent(application, ChatService::class.java).apply {
+            action = ChatService.ACTION_STOP
+        }
+        application.startService(stopIntent)
     }
 
     fun deleteChat(chat: Chat) {

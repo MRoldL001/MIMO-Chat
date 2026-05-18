@@ -50,6 +50,7 @@ import com.mroldl001.mimochat.ui.chat.viewmodel.ChatViewModel
 import com.mroldl001.mimochat.ui.chat.viewmodel.SkillType
 import com.mroldl001.mimochat.ui.theme.ThemeColor
 import com.mroldl001.mimochat.ui.theme.ThemeMode
+import com.mroldl001.mimochat.ui.theme.supportsDynamicColor
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -531,19 +532,19 @@ private fun formatTimestamp(timestamp: Long): String {
 @Composable
 private fun EmptyState(modifier: Modifier = Modifier) {
     val welcomeTexts = listOf(
-        "MIMO在这里，今天你要做什么？",
-        "MIMO在这里，有什么好主意？",
-        "MIMO在这里，一起完成任务吧！",
-        "MIMO在这里，シタイだけ探した冒険TONGUE",
-        "MIMO在这里，有什么可以帮你的？"
+        "MiMo在这里，今天你要做什么？",
+        "MiMo在这里，有什么好主意？",
+        "MiMo在这里，一起完成任务吧！",
+        "MiMo在这里，シタイだけ探した冒険TONGUE",
+        "MiMo在这里，有什么可以帮你的？"
     )
     
     val randomText = remember {
         welcomeTexts.random()
     }
     
-    val firstLine = "MIMO在这里，"
-    val secondLine = randomText.removePrefix("MIMO在这里，")
+    val firstLine = "MiMo在这里，"
+    val secondLine = randomText.removePrefix("MiMo在这里，")
     
     Column(
         modifier = modifier.padding(32.dp),
@@ -748,6 +749,17 @@ private fun SettingsDialog(
         ThemeColor.PURPLE to "罗兰紫"
     )
     
+    val availableColors = buildList {
+        add(ThemeColor.WHITE)
+        if (supportsDynamicColor()) {
+            add(ThemeColor.AUTO_COLOR)
+        }
+        add(ThemeColor.HATSUNE_MIKU)
+        add(ThemeColor.MI_ORANGE)
+        add(ThemeColor.GREEN)
+        add(ThemeColor.PURPLE)
+    }
+    
     val themeColorValues = mapOf(
         ThemeColor.WHITE to Color(0xFFFFFFFF),
         ThemeColor.HATSUNE_MIKU to Color(0xFF39C5BB),
@@ -849,8 +861,7 @@ private fun SettingsDialog(
                             horizontalArrangement = Arrangement.spacedBy(16.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            listOf(ThemeColor.WHITE, ThemeColor.AUTO_COLOR, ThemeColor.HATSUNE_MIKU)
-                            .forEach { colorOption ->
+                            availableColors.take(3).forEach { colorOption ->
                                 ThemeColorOption(
                                     selected = tempThemeColor == colorOption,
                                     onClick = { tempThemeColor = colorOption },
@@ -860,19 +871,20 @@ private fun SettingsDialog(
                                 )
                             }
                         }
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            listOf(ThemeColor.MI_ORANGE, ThemeColor.GREEN, ThemeColor.PURPLE)
-                            .forEach { colorOption ->
-                                ThemeColorOption(
-                                    selected = tempThemeColor == colorOption,
-                                    onClick = { tempThemeColor = colorOption },
-                                    label = themeColorNames[colorOption] ?: "",
-                                    color = themeColorValues[colorOption] ?: Color.Gray,
-                                    isAutoColor = colorOption == ThemeColor.AUTO_COLOR
-                                )
+                        if (availableColors.size > 3) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                availableColors.drop(3).forEach { colorOption ->
+                                    ThemeColorOption(
+                                        selected = tempThemeColor == colorOption,
+                                        onClick = { tempThemeColor = colorOption },
+                                        label = themeColorNames[colorOption] ?: "",
+                                        color = themeColorValues[colorOption] ?: Color.Gray,
+                                        isAutoColor = colorOption == ThemeColor.AUTO_COLOR
+                                    )
+                                }
                             }
                         }
                     }

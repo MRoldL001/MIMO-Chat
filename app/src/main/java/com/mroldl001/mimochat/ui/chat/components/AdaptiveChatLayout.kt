@@ -38,6 +38,7 @@ import com.mroldl001.mimochat.ui.chat.viewmodel.ChatUiState
 import com.mroldl001.mimochat.ui.chat.viewmodel.SkillType
 import com.mroldl001.mimochat.ui.theme.ThemeColor
 import com.mroldl001.mimochat.ui.theme.ThemeMode
+import com.mroldl001.mimochat.ui.theme.supportsDynamicColor
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -77,6 +78,7 @@ fun AdaptiveChatLayout(
     var showApiBaseUrlDialog by remember { mutableStateOf(false) }
     var showCustomPromptDialog by remember { mutableStateOf(false) }
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
+    var showApiKeyWarningDialog by remember { mutableStateOf(false) }
     
     var chatToDelete by remember { mutableStateOf<Chat?>(null) }
     
@@ -206,7 +208,13 @@ fun AdaptiveChatLayout(
                     )
 
                     InputBar(
-                        onSendMessage = onSendMessage,
+                        onSendMessage = {
+                            if (uiState.apiKey.isBlank()) {
+                                showApiKeyWarningDialog = true
+                            } else {
+                                onSendMessage(it)
+                            }
+                        },
                         onStopGenerating = onStopGenerating,
                         isGenerating = uiState.isLoading
                     )
@@ -274,6 +282,19 @@ fun AdaptiveChatLayout(
                 showCustomPromptDialog = true
             },
             onDismiss = { showSettingsDialog = false }
+        )
+    }
+    
+    if (showApiKeyWarningDialog) {
+        AlertDialog(
+            onDismissRequest = { showApiKeyWarningDialog = false },
+            title = { Text("提示") },
+            text = { Text("未设置API Key") },
+            confirmButton = {
+                TextButton(onClick = { showApiKeyWarningDialog = false }) {
+                    Text("确定")
+                }
+            }
         )
     }
     
@@ -410,12 +431,34 @@ private fun formatTimestamp(timestamp: Long): String {
 
 @Composable
 private fun TabletEmptyState(modifier: Modifier = Modifier) {
+    val welcomeTexts = listOf(
+        "MiMo在这里，今天你要做什么？",
+        "MiMo在这里，有什么好主意？",
+        "MiMo在这里，一起完成任务吧！",
+        "MiMo在这里，シタイだけ探した冒険TONGUE",
+        "MiMo在这里，有什么可以帮你的？"
+    )
+    
+    val randomText = remember {
+        welcomeTexts.random()
+    }
+    
+    val firstLine = "MiMo在这里，"
+    val secondLine = randomText.removePrefix("MiMo在这里，")
+    
     Column(
         modifier = modifier.padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "MIMO在这里，今天你要做什么？",
+            text = firstLine,
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+        )
+        Text(
+            text = secondLine,
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface,
@@ -670,6 +713,17 @@ private fun SettingsDialog(
         ThemeColor.PURPLE to Color(0xFF6650A4)
     )
     
+    val availableColors = buildList {
+        add(ThemeColor.WHITE)
+        if (supportsDynamicColor()) {
+            add(ThemeColor.AUTO_COLOR)
+        }
+        add(ThemeColor.HATSUNE_MIKU)
+        add(ThemeColor.MI_ORANGE)
+        add(ThemeColor.GREEN)
+        add(ThemeColor.PURPLE)
+    }
+    
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -759,8 +813,7 @@ private fun SettingsDialog(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.horizontalScroll(rememberScrollState())
                     ) {
-                        listOf(ThemeColor.WHITE, ThemeColor.AUTO_COLOR, ThemeColor.HATSUNE_MIKU, ThemeColor.MI_ORANGE, ThemeColor.GREEN, ThemeColor.PURPLE)
-                        .forEach { colorOption ->
+                        availableColors.forEach { colorOption ->
                             ThemeColorOption(
                                 selected = tempThemeColor == colorOption,
                                 onClick = { tempThemeColor = colorOption },

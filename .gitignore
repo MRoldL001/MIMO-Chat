@@ -82,6 +82,7 @@ Thumbs.db
 
 # Trae IDE files
 .trae/
+docs/
 
 # Backup files
 *.backup
