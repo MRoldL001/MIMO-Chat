@@ -6,11 +6,15 @@
 
 MIMO Chat - 第三方小米 MiMo 大模型 Android 客户端
 
+---
+
 [![MiMo](https://img.shields.io/badge/MiMo-console-FF7E00?style=for-the-badge&logo=xiaomi&logoColor=white)](https://platform.xiaomimimo.com/console/balance)
 [![100T](https://img.shields.io/badge/MiMo-100T%20Toke%20Grant%20for%20Builders-FF7E00?style=for-the-badge&logo=xiaomi&logoColor=white)](https://100t.xiaomimimo.com/)
 
 [![MiMo_han](https://img.shields.io/badge/MiMo-控制台-FF7E00?style=for-the-badge&logo=xiaomi&logoColor=white)](https://platform.xiaomimimo.com/console/balance)
 [![100T_han](https://img.shields.io/badge/MiMo-百万亿%20Token%20创造者激励计划-FF7E00?style=for-the-badge&logo=xiaomi&logoColor=white)](https://100t.xiaomimimo.com/)
+
+---
 
 > [!NOTE]
 > An Android client built with Kotlin that provides quick integration with the Xiaomi MiMo series Large Model APIs. Features include LaTeX rendering, custom prompts, 和 large model skills
