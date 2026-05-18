@@ -1,5 +1,7 @@
 package com.mroldl001.mimochat.ui.chat.components
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
@@ -26,6 +28,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -68,9 +71,11 @@ fun AdaptiveChatLayout(
     onApiKeySaved: (String) -> Unit,
     onApiBaseUrlSaved: (String) -> Unit,
     onCustomPromptSaved: (String) -> Unit,
+    onClearError: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
+    val context = LocalContext.current
     val listState = rememberLazyListState()
 
     var showSettingsDialog by remember { mutableStateOf(false) }
@@ -124,7 +129,11 @@ fun AdaptiveChatLayout(
                 Column(modifier = Modifier.fillMaxSize()) {
                     ChatHistoryHeader(
                         onSearchClick = onNavigateToSearch,
-                        onSettingsClick = { showSettingsDialog = true }
+                        onSettingsClick = { showSettingsDialog = true },
+                        onGitHubClick = {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/MRoldL001/MIMO-Chat"))
+                            context.startActivity(intent)
+                        }
                     )
 
                     if (uiState.chats.isEmpty()) {
@@ -253,6 +262,21 @@ fun AdaptiveChatLayout(
                                 )
                             }
                         }
+                    }
+                }
+
+                uiState.error?.let { error ->
+                    Snackbar(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(16.dp),
+                        action = {
+                            TextButton(onClick = onClearError) {
+                                Text("关闭")
+                            }
+                        }
+                    ) {
+                        Text(error)
                     }
                 }
             }

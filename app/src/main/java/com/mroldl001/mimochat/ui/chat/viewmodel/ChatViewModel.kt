@@ -422,10 +422,20 @@ class ChatViewModel @Inject constructor(
                             }
                         }
                     }
+                    val displayError = if (error.contains("Unable to resolve host") || 
+                        error.contains("Failed to connect") ||
+                        error.contains("timeout") ||
+                        error.contains("network") ||
+                        error.contains("Network") ||
+                        error.contains("网络")) {
+                        "无网络连接"
+                    } else {
+                        error
+                    }
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            error = error
+                            error = displayError
                         )
                     }
                 } else {

@@ -1,5 +1,7 @@
 package com.mroldl001.mimochat.ui.chat
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -34,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -68,6 +71,7 @@ fun ChatScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val messages = viewModel.messages
+    val context = LocalContext.current
     val streamingContent by viewModel.streamingContent
     val streamingReasoning by viewModel.streamingReasoning
     val isStreaming by viewModel.isStreaming
@@ -124,7 +128,8 @@ fun ChatScreen(
             },
             onCustomPromptSaved = { prompt ->
                 viewModel.setCustomSystemPrompt(prompt)
-            }
+            },
+            onClearError = { viewModel.clearError() }
         )
         return
     }
@@ -196,7 +201,11 @@ fun ChatScreen(
                 Column(modifier = Modifier.fillMaxSize()) {
                     ChatHistoryHeader(
                         onSearchClick = onNavigateToSearch,
-                        onSettingsClick = { showSettingsDialog = true }
+                        onSettingsClick = { showSettingsDialog = true },
+                        onGitHubClick = {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/MRoldL001/MIMO-Chat"))
+                            context.startActivity(intent)
+                        }
                     )
 
                     val filteredChats = uiState.chats.filter {

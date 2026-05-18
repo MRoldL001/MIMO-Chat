@@ -3,7 +3,6 @@ package com.mroldl001.mimochat.ui.chat.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -22,14 +21,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.mroldl001.mimochat.R
 
 @Composable
 fun ChatHistoryHeader(
     title: String = "对话历史",
     onSearchClick: () -> Unit,
     onSettingsClick: () -> Unit,
+    onGitHubClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -55,14 +58,40 @@ fun ChatHistoryHeader(
                 modifier = Modifier.padding(horizontal = 8.dp)
             ) {
                 IconCircleButton(
-                    icon = Icons.Default.Search,
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    },
                     contentDescription = "搜索",
                     onClick = onSearchClick
                 )
                 IconCircleButton(
-                    icon = Icons.Default.Settings,
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    },
                     contentDescription = "设置",
                     onClick = onSettingsClick
+                )
+                IconCircleButton(
+                    icon = {
+                        Icon(
+                            painter = painterResource(id = R.drawable.github_icon),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    },
+                    contentDescription = "GitHub",
+                    onClick = onGitHubClick
                 )
             }
         }
@@ -71,7 +100,7 @@ fun ChatHistoryHeader(
 
 @Composable
 private fun IconCircleButton(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: @Composable () -> Unit,
     contentDescription: String,
     onClick: () -> Unit
 ) {
@@ -81,16 +110,11 @@ private fun IconCircleButton(
         color = Color.Transparent,
         modifier = Modifier.size(40.dp)
     ) {
-        androidx.compose.foundation.layout.Box(
+        Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier.fillMaxSize()
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = contentDescription,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(24.dp)
-            )
+            icon()
         }
     }
 }
