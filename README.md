@@ -17,6 +17,9 @@ MIMO Chat - 非官方小米 MiMo 大模型 Android 客户端
 > [!TIP]
 > 若你正在使用小米 [百万亿 Token 创造者激励计划](https://100t.xiaomimimo.com/) 所赠送的 Token，请在设置中**将 API Base URL 更改为订阅接口**
 
+> [!TIP]
+> 部分厂商定制系统会限制非应用商店下载应用的通知权限。为保障网络连接的稳定性，请自行前往设置中**确认已开启本应用的通知权限**
+
 ![Kotlin](https://img.shields.io/badge/Kotlin-1.9.0-7F52FF?style=flat-square&logo=kotlin&logoColor=white)
 ![Gradle](https://img.shields.io/badge/Gradle-8.2.0-02303A?style=flat-square&logo=gradle&logoColor=white)
 ![Compose BOM](https://img.shields.io/badge/Compose%20BOM-2023.08.00-4285F4?style=flat-square&logo=jetpackcompose&logoColor=white)
@@ -36,7 +39,6 @@ MIMO Chat - 非官方小米 MiMo 大模型 Android 客户端
 - 自定义系统提示词
 - 手机端与 Pad 端自适应布局
 - 通知栏保活
- - 请自行确认是否在设置中允许应用通知
 
 ## 🚀 快速开始
 
