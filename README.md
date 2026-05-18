@@ -53,7 +53,7 @@ MIMO Chat - 第三方小米 MiMo 大模型 Android 客户端
 #### 方式二：从源码构建
 
 1. 使用 `git clone` 将 Repo 克隆到本地
-2. 使用 `Android Studio` 或者其它装了 Android 插件的`Jetbrains IDE` 打开项目
+2. 使用 `Android Studio` 或者其它任何装了 Android 开发插件的`Jetbrains IDE` 打开项目
 3. 同步 `Gradle`
 4. 运行或构建 `.apk`
 
