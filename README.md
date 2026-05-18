@@ -83,7 +83,8 @@ MIMO Chat - 第三方小米 MiMo 大模型 Android 客户端
 
 ## 📱 系统要求
 
-- Android 7.0 (API 24) 或更高版本
+- Android 7 (API 24) 或更高版本
+- 动态色彩功能仅支持 Android 12 (API 31) 或更高版本
 - 支持手机和平板设备
 
 ## 🎨 主题
