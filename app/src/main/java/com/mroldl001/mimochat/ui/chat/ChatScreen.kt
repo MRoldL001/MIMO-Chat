@@ -291,7 +291,7 @@ fun ChatScreen(
                     SkillToggleBar(
                         isThinkingMode = isThinkingMode,
                         activeSkill = uiState.activeSkill,
-                        isGenerating = uiState.isLoading || isStreaming,
+                        isGenerating = isStreaming,
                         onThinkingModeToggle = { newValue ->
                             isThinkingMode = newValue
                         },
@@ -312,7 +312,7 @@ fun ChatScreen(
                             }
                         },
                         onStopGenerating = { viewModel.stopGenerating() },
-                        isGenerating = uiState.isLoading
+                        isGenerating = isStreaming
                     )
                 }
             }

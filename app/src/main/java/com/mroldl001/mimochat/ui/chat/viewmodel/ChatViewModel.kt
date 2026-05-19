@@ -76,6 +76,12 @@ object SkillPrompts {
     }
 }
 
+data class StreamState(
+    val content: String = "",
+    val reasoning: String = "",
+    val isActive: Boolean = false
+)
+
 data class ChatUiState(
     val currentChat: Chat? = null,
     val availableModels: List<AIModel> = emptyList(),
@@ -123,6 +129,9 @@ class ChatViewModel @Inject constructor(
 
     private var streamJob: kotlinx.coroutines.Job? = null
     private var messagesJob: kotlinx.coroutines.Job? = null
+    private var chatStreamStates: MutableMap<Long, StreamState> = mutableMapOf()
+    private var activeChatId: Long? = null
+    private val activeStreams = mutableSetOf<Long>()
 
     init {
         loadModels()
@@ -196,6 +205,14 @@ class ChatViewModel @Inject constructor(
 
     fun createNewChat() {
         viewModelScope.launch {
+            activeChatId?.let { currentId ->
+                chatStreamStates[currentId] = StreamState(
+                    content = streamingContent.value,
+                    reasoning = streamingReasoning.value,
+                    isActive = activeStreams.contains(currentId)
+                )
+            }
+            
             val modelId = _uiState.value.selectedModel?.id ?: "mimo-v2.5-pro"
             val chatId = chatRepository.createChat(
                 title = DEFAULT_CHAT_TITLE,
@@ -205,6 +222,12 @@ class ChatViewModel @Inject constructor(
             if (chat != null) {
                 messagesJob?.cancel()
                 messages.clear()
+                
+                streamingContent.value = ""
+                streamingReasoning.value = ""
+                isStreaming.value = false
+                
+                activeChatId = chat.id
                 _uiState.update {
                     it.copy(
                         currentChat = chat,
@@ -220,6 +243,14 @@ class ChatViewModel @Inject constructor(
     }
 
     fun selectChat(chat: Chat) {
+        activeChatId?.let { currentId ->
+            chatStreamStates[currentId] = StreamState(
+                content = streamingContent.value,
+                reasoning = streamingReasoning.value,
+                isActive = activeStreams.contains(currentId)
+            )
+        }
+        
         messagesJob?.cancel()
         viewModelScope.launch {
             val fullChat = chatRepository.getChatById(chat.id)
@@ -230,6 +261,20 @@ class ChatViewModel @Inject constructor(
                     selectedModel = model ?: it.selectedModel
                 )
             }
+
+            val savedState = chatStreamStates[chat.id]
+            val chatIsActive = activeStreams.contains(chat.id)
+            if (savedState != null) {
+                streamingContent.value = savedState.content
+                streamingReasoning.value = savedState.reasoning
+                isStreaming.value = chatIsActive
+            } else {
+                streamingContent.value = ""
+                streamingReasoning.value = ""
+                isStreaming.value = chatIsActive
+            }
+            
+            activeChatId = chat.id
 
             messagesJob = viewModelScope.launch {
                 chatRepository.getMessages(chat.id).collect { msgs ->
@@ -242,6 +287,10 @@ class ChatViewModel @Inject constructor(
 
     fun sendMessage(content: String, thinkingEnabled: Boolean = true) {
         viewModelScope.launch {
+            if (activeStreams.contains(activeChatId)) {
+                return@launch
+            }
+            
             if (_uiState.value.currentChat == null) {
                 val modelId = _uiState.value.selectedModel?.id ?: "mimo-v2.5-pro"
                 val chatId = chatRepository.createChat(
@@ -256,6 +305,7 @@ class ChatViewModel @Inject constructor(
                             error = null
                         )
                     }
+                    activeChatId = chat.id
                 } else {
                     _uiState.update {
                         it.copy(
@@ -268,6 +318,7 @@ class ChatViewModel @Inject constructor(
             }
 
             val chat = _uiState.value.currentChat!!
+            activeChatId = chat.id
             val isNewChat = chat.title == DEFAULT_CHAT_TITLE
             android.util.Log.d("ChatViewModel", "Current chat: ${chat.title}, isNewChat: $isNewChat")
 
@@ -330,8 +381,10 @@ class ChatViewModel @Inject constructor(
             streamingContent.value = ""
             streamingReasoning.value = ""
             isStreaming.value = true
+            activeStreams.add(chat.id)
 
             val contextMessages = messages.filter { !it.isAborted && !it.isFailed }.toList()
+            val targetChatId = chat.id
 
             val contentBuffer = mutableListOf<String>()
             val reasoningBuffer = mutableListOf<String>()
@@ -380,24 +433,37 @@ class ChatViewModel @Inject constructor(
 
             viewModelScope.launch {
                 var reasoningPhase = true
+                var currentContent = ""
+                var currentReasoning = ""
 
                 while (!isStreamDone || contentBuffer.isNotEmpty() || reasoningBuffer.isNotEmpty()) {
                     var consumed = false
 
                     if (reasoningPhase && reasoningBuffer.isNotEmpty()) {
                         val delta = reasoningBuffer.removeAt(0)
-                        streamingReasoning.value += delta
+                        currentReasoning += delta
                         consumed = true
                     } else if (contentBuffer.isNotEmpty()) {
                         val delta = contentBuffer.removeAt(0)
-                        streamingContent.value += delta
+                        currentContent += delta
                         consumed = true
                         reasoningPhase = false
                     } else if (reasoningBuffer.isNotEmpty()) {
                         val delta = reasoningBuffer.removeAt(0)
-                        streamingReasoning.value += delta
+                        currentReasoning += delta
                         consumed = true
                     }
+
+                    if (activeChatId == targetChatId && activeStreams.contains(targetChatId)) {
+                        streamingContent.value = currentContent
+                        streamingReasoning.value = currentReasoning
+                    }
+
+                    chatStreamStates[targetChatId] = StreamState(
+                        content = currentContent,
+                        reasoning = currentReasoning,
+                        isActive = !isStreamDone
+                    )
 
                     if (consumed) {
                         delay(8)
@@ -406,20 +472,24 @@ class ChatViewModel @Inject constructor(
                     }
                 }
 
-                isStreaming.value = false
+                if (activeChatId == targetChatId) {
+                    isStreaming.value = false
+                }
+                activeStreams.remove(targetChatId)
+
+                chatStreamStates[targetChatId] = StreamState(
+                    content = currentContent,
+                    reasoning = currentReasoning,
+                    isActive = false
+                )
 
                 val error = streamError
                 if (error != null) {
-                    // Mark last user message as failed
-                    val lastUserIndex = messages.indexOfLast { it.role == "user" }
-                    if (lastUserIndex >= 0) {
-                        val lastUserMessage = messages[lastUserIndex]
-                        if (!lastUserMessage.isFailed) {
-                            val failedUserMessage = lastUserMessage.copy(isFailed = true)
-                            messages[lastUserIndex] = failedUserMessage
-                            viewModelScope.launch {
-                                chatRepository.updateMessage(failedUserMessage)
-                            }
+                    val lastUserMessage = messages.lastOrNull { it.role == "user" && it.chatId == targetChatId }
+                    if (lastUserMessage != null && !lastUserMessage.isFailed) {
+                        val failedUserMessage = lastUserMessage.copy(isFailed = true)
+                        viewModelScope.launch {
+                            chatRepository.updateMessage(failedUserMessage)
                         }
                     }
                     val displayError = if (error.contains("Unable to resolve host") || 
@@ -432,33 +502,41 @@ class ChatViewModel @Inject constructor(
                     } else {
                         error
                     }
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            error = displayError
-                        )
+                    if (activeChatId == targetChatId) {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                error = displayError
+                            )
+                        }
                     }
                 } else {
                     val finalMessage = Message(
-                        chatId = chat.id,
+                        chatId = targetChatId,
                         role = "assistant",
-                        content = streamingContent.value,
-                        reasoningContent = streamingReasoning.value.ifBlank { null }
+                        content = currentContent,
+                        reasoningContent = currentReasoning.ifBlank { null }
                     )
-                    messages.add(finalMessage)
                     chatRepository.saveMessage(finalMessage)
-                    _uiState.update { it.copy(isLoading = false) }
+                    if (activeChatId == targetChatId) {
+                        messages.add(finalMessage)
+                        _uiState.update { it.copy(isLoading = false) }
+                    }
                 }
 
-                val stopIntent = Intent(application, ChatService::class.java).apply {
-                    action = ChatService.ACTION_STOP
+                // 只有在所有流都完成时才停止服务
+                if (activeStreams.isEmpty()) {
+                    val stopIntent = Intent(application, ChatService::class.java).apply {
+                        action = ChatService.ACTION_STOP
+                    }
+                    application.startService(stopIntent)
                 }
-                application.startService(stopIntent)
             }
         }
     }
 
     fun stopGenerating() {
+        activeStreams.remove(activeChatId)
         streamJob?.cancel()
         streamJob = null
         isStreaming.value = false
@@ -466,6 +544,10 @@ class ChatViewModel @Inject constructor(
         val content = streamingContent.value
         val reasoning = streamingReasoning.value
         val chatId = _uiState.value.currentChat?.id ?: 0
+
+        chatId.takeIf { it > 0 }?.let {
+            chatStreamStates[it] = StreamState(content, reasoning, false)
+        }
 
         val lastUserIndex = messages.indexOfLast { it.role == "user" }
         if (lastUserIndex >= 0) {
@@ -497,10 +579,13 @@ class ChatViewModel @Inject constructor(
         streamingReasoning.value = ""
         _uiState.update { it.copy(isLoading = false) }
 
-        val stopIntent = Intent(application, ChatService::class.java).apply {
-            action = ChatService.ACTION_STOP
+        // 只有在所有流都完成时才停止服务
+        if (activeStreams.isEmpty()) {
+            val stopIntent = Intent(application, ChatService::class.java).apply {
+                action = ChatService.ACTION_STOP
+            }
+            application.startService(stopIntent)
         }
-        application.startService(stopIntent)
     }
 
     fun deleteChat(chat: Chat) {

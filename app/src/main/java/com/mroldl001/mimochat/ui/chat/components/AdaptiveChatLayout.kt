@@ -208,7 +208,7 @@ fun AdaptiveChatLayout(
                     SkillToggleBar(
                         isThinkingMode = isThinkingMode,
                         activeSkill = uiState.activeSkill,
-                        isGenerating = uiState.isLoading || isStreaming,
+                        isGenerating = isStreaming,
                         onThinkingModeToggle = onThinkingModeChanged,
                         onSkillToggle = onSetActiveSkill,
                         modifier = Modifier
@@ -225,7 +225,7 @@ fun AdaptiveChatLayout(
                             }
                         },
                         onStopGenerating = onStopGenerating,
-                        isGenerating = uiState.isLoading
+                        isGenerating = isStreaming
                     )
                 }
             }

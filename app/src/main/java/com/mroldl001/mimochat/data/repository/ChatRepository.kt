@@ -7,6 +7,7 @@ import com.mroldl001.mimochat.data.local.ChatEntity
 import com.mroldl001.mimochat.data.local.MessageDao
 import com.mroldl001.mimochat.data.local.MessageEntity
 import com.mroldl001.mimochat.di.ApiServiceFactory
+import com.mroldl001.mimochat.domain.model.ApiErrorCode
 import com.mroldl001.mimochat.domain.model.Chat
 import com.mroldl001.mimochat.domain.model.Message
 import com.mroldl001.mimochat.domain.model.SearchResult
@@ -178,8 +179,7 @@ class ChatRepository @Inject constructor(
 
             okHttpClient.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) {
-                    val errorBody = response.body?.string() ?: ""
-                    emit(StreamEvent.Error("HTTP ${response.code}: $errorBody"))
+                    emit(StreamEvent.Error(ApiErrorCode.getDisplayMessage(response.code)))
                     return@use
                 }
 
@@ -292,7 +292,7 @@ class ChatRepository @Inject constructor(
 
                 val response = okHttpClient.newCall(request).execute()
                 if (!response.isSuccessful) {
-                    return@withContext Result.failure(Exception("HTTP ${response.code}"))
+                    return@withContext Result.failure(Exception(ApiErrorCode.getDisplayMessage(response.code)))
                 }
 
                 val responseBody = response.body?.string() ?: return@withContext Result.failure(Exception("Empty response"))

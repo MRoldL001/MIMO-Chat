@@ -55,10 +55,9 @@ data class ContentSegment(
 fun splitContent(text: String): List<ContentSegment> {
     val segments = mutableListOf<ContentSegment>()
     
+    // 只匹配块级元素：代码块和 LaTeX 块
     val codeBlockRegex = Regex("```([\\s\\S]*?)```")
-    val inlineCodeRegex = Regex("`([^`\n]+)`")
     val latexBlockRegex = Regex("""\$\$([\s\S]*?)\$\$""")
-    val latexInlineRegex = Regex("""\$([^$\n]+)\$""")
     
     val allMatches = mutableListOf<MatchInfo>()
     
@@ -66,24 +65,11 @@ fun splitContent(text: String): List<ContentSegment> {
         allMatches.add(MatchInfo(match.range, match, ContentType.CODE_BLOCK))
     }
     
-    inlineCodeRegex.findAll(text).forEach { match ->
-        allMatches.add(MatchInfo(match.range, match, ContentType.INLINE_CODE))
-    }
-    
     latexBlockRegex.findAll(text).forEach { match ->
         allMatches.add(MatchInfo(match.range, match, ContentType.LATEX_BLOCK))
     }
     
-    latexInlineRegex.findAll(text).forEach { match ->
-        allMatches.add(MatchInfo(match.range, match, ContentType.LATEX_INLINE))
-    }
-    
-    allMatches.sortWith(compareBy({ it.range.first }, { 
-        when (it.type) {
-            ContentType.LATEX_BLOCK, ContentType.CODE_BLOCK -> 0
-            else -> 1
-        }
-    }))
+    allMatches.sortBy { it.range.first }
     
     var lastEnd = 0
     allMatches.forEach { info ->
@@ -101,15 +87,11 @@ fun splitContent(text: String): List<ContentSegment> {
         val groupValue = info.match.groupValues.getOrNull(1) ?: ""
         
         when (info.type) {
-            ContentType.MARKDOWN -> { }
             ContentType.CODE_BLOCK -> {
                 val code = groupValue.trim()
                 if (code.isNotBlank()) {
                     segments.add(ContentSegment(ContentType.CODE_BLOCK, code))
                 }
-            }
-            ContentType.INLINE_CODE -> {
-                segments.add(ContentSegment(ContentType.INLINE_CODE, groupValue))
             }
             ContentType.LATEX_BLOCK -> {
                 val latex = groupValue.trim()
@@ -117,12 +99,7 @@ fun splitContent(text: String): List<ContentSegment> {
                     segments.add(ContentSegment(ContentType.LATEX_BLOCK, latex))
                 }
             }
-            ContentType.LATEX_INLINE -> {
-                val latex = groupValue.trim()
-                if (latex.isNotBlank()) {
-                    segments.add(ContentSegment(ContentType.LATEX_INLINE, "\$$latex\$"))
-                }
-            }
+            else -> {}
         }
         
         lastEnd = info.range.last + 1
@@ -247,16 +224,6 @@ fun MixedMarkdownLatex(
                 ContentType.CODE_BLOCK -> {
                     CodeBlockView(code = segment.content)
                 }
-                ContentType.INLINE_CODE -> {
-                    InlineCodeView(code = segment.content, textColor = textColor)
-                }
-                ContentType.LATEX_INLINE -> {
-                    LatexView(
-                        latex = segment.content,
-                        textColor = textColor,
-                        isBlock = false
-                    )
-                }
                 ContentType.LATEX_BLOCK -> {
                     LatexView(
                         latex = segment.content,
@@ -264,6 +231,7 @@ fun MixedMarkdownLatex(
                         isBlock = true
                     )
                 }
+                else -> {}
             }
         }
     }
