@@ -16,7 +16,33 @@ data class ChatCompletionRequest(
     val frequencyPenalty: Double = 0.0,
     @SerializedName("presence_penalty")
     val presencePenalty: Double = 0.0,
-    val thinking: ThinkingConfig? = null
+    val thinking: ThinkingConfig? = null,
+    val tools: List<ToolConfig>? = null,
+    @SerializedName("tool_choice")
+    val toolChoice: String? = null
+)
+
+data class ToolConfig(
+    val type: String,
+    val function: FunctionConfig? = null,
+    @SerializedName("max_keyword")
+    val maxKeyword: Int? = null,
+    @SerializedName("force_search")
+    val forceSearch: Boolean? = null,
+    val limit: Int? = null,
+    @SerializedName("user_location")
+    val userLocation: UserLocation? = null
+)
+
+data class FunctionConfig(
+    val name: String
+)
+
+data class UserLocation(
+    val type: String,
+    val country: String? = null,
+    val region: String? = null,
+    val city: String? = null
 )
 
 data class MessageRequest(
@@ -47,7 +73,21 @@ data class Choice(
 data class AssistantMessage(
     val content: String?,
     @SerializedName("reasoning_content")
-    val reasoningContent: String?
+    val reasoningContent: String?,
+    val annotations: List<Annotation>? = null
+)
+
+data class Annotation(
+    val type: String,
+    val url: String,
+    val title: String,
+    val summary: String? = null,
+    @SerializedName("site_name")
+    val siteName: String? = null,
+    @SerializedName("publish_time")
+    val publishTime: String? = null,
+    @SerializedName("logo_url")
+    val logoUrl: String? = null
 )
 
 // Streaming response chunk
@@ -69,7 +109,8 @@ data class DeltaMessage(
     val role: String? = null,
     val content: String? = null,
     @SerializedName("reasoning_content")
-    val reasoningContent: String? = null
+    val reasoningContent: String? = null,
+    val annotations: List<Annotation>? = null
 )
 
 data class Usage(

@@ -27,6 +27,13 @@
       "description": "全模态版本",
       "type": "llm",
       "capabilities": ["chat", "multimodal"]
+    },
+    {
+      "id": "mimo-v2-flash",
+      "name": "MiMo V2 Flash",
+      "description": "快速响应版本",
+      "type": "llm",
+      "capabilities": ["chat"]
     }
   ]
 }

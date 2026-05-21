@@ -30,7 +30,6 @@ sealed class Screen {
 fun AppNavigation(
     isExpandedScreen: Boolean = false,
     onThemeChanged: (ThemeColor, ThemeMode) -> Unit = { _, _ -> },
-    onSearchStateChanged: (Boolean) -> Unit = {},
     onNavigateFromSearch: () -> Unit = {},
     onNavigateFromDrawer: (Boolean) -> Unit = {},
     onBackToChat: ((() -> Unit) -> Unit)? = null
@@ -87,7 +86,6 @@ fun AppNavigation(
                             selectedChatId = chatId
                         },
                         onThemeChanged = onThemeChanged,
-                        onSearchStateChanged = onSearchStateChanged,
                         onNavigateFromDrawer = onNavigateFromDrawer,
                         initialChatId = selectedChatId
                     )
@@ -102,7 +100,6 @@ fun AppNavigation(
                             selectedChatId = chatId
                             currentScreen = Screen.Chat
                         },
-                        onSearchStateChanged = onSearchStateChanged,
                         onNavigateFromSearch = onNavigateFromSearch
                     )
                 }

@@ -3,12 +3,14 @@ package com.mroldl001.mimochat.ui.chat.components
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.widget.Toast
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.background
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -21,6 +23,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Psychology
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Web
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -32,12 +36,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlin.math.roundToInt
+import com.mroldl001.mimochat.domain.model.WebSearchResult
 
 enum class ContentType {
     MARKDOWN,
@@ -189,6 +195,150 @@ fun ThinkingCard(
                     modifier = Modifier
                         .padding(horizontal = 12.dp)
                         .padding(bottom = 12.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun SearchResultsCard(
+    searchResults: List<WebSearchResult>,
+    modifier: Modifier = Modifier
+) {
+    var isExpanded by remember { mutableStateOf(false) }
+    val interactionSource = remember { MutableInteractionSource() }
+    
+    val rotation by animateFloatAsState(
+        targetValue = if (isExpanded) 180f else 0f,
+        animationSpec = tween(durationMillis = 200),
+        label = "arrow_rotation"
+    )
+
+    Surface(
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        border = BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
+        ),
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Column {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(
+                        interactionSource = interactionSource,
+                        indication = null
+                    ) { isExpanded = !isExpanded }
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = null,
+                    tint = Color(0xFFB0B0B0),
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = "搜索结果",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color(0xFFB0B0B0)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Icon(
+                    imageVector = Icons.Default.ArrowDropDown,
+                    contentDescription = if (isExpanded) "收起" else "展开",
+                    tint = Color(0xFFB0B0B0),
+                    modifier = Modifier
+                        .size(18.dp)
+                        .rotate(rotation)
+                        .offset {
+                            IntOffset(0, (-2).dp.roundToPx())
+                        }
+                )
+            }
+            
+            if (isExpanded) {
+                Column(
+                    modifier = Modifier
+                        .padding(horizontal = 12.dp)
+                        .padding(bottom = 12.dp)
+                ) {
+                    searchResults.forEachIndexed { index, result ->
+                        if (index > 0) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                        SearchResultItem(result = result)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SearchResultItem(result: WebSearchResult) {
+    val context = LocalContext.current
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        color = MaterialTheme.colorScheme.surface,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                try {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(result.url))
+                    context.startActivity(intent)
+                } catch (e: Exception) {
+                    Toast.makeText(context, "无法打开链接", Toast.LENGTH_SHORT).show()
+                }
+            }
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(8.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Web,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .size(32.dp)
+                    .padding(4.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        shape = RoundedCornerShape(6.dp)
+                    )
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    result.siteName?.let { siteName ->
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = MaterialTheme.colorScheme.secondaryContainer,
+                            modifier = Modifier.padding(end = 8.dp)
+                        ) {
+                            Text(
+                                text = siteName,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = result.title,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }

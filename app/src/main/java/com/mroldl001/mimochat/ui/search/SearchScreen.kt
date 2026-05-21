@@ -27,7 +27,6 @@ import java.util.*
 fun SearchScreen(
     onNavigateBack: () -> Unit,
     onNavigateToChat: (Long) -> Unit,
-    onSearchStateChanged: (Boolean) -> Unit = {},
     onNavigateFromSearch: () -> Unit = {},
     viewModel: SearchViewModel = hiltViewModel()
 ) {
@@ -37,14 +36,9 @@ fun SearchScreen(
     val hasSearched by viewModel.hasSearched
     val focusManager = LocalFocusManager.current
 
-    LaunchedEffect(Unit) {
-        onSearchStateChanged(true)
-    }
-
     DisposableEffect(Unit) {
         onDispose {
             onNavigateFromSearch()
-            onSearchStateChanged(false)
         }
     }
 

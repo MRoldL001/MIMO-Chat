@@ -11,6 +11,7 @@ data class MessageEntity(
     val role: String,
     val content: String,
     val reasoningContent: String? = null,
+    val searchResultsJson: String? = null,
     val timestamp: Long = System.currentTimeMillis(),
     val isStreaming: Boolean = false,
     val isAborted: Boolean = false,

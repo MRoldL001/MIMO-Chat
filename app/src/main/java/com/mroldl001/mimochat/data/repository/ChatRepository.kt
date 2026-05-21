@@ -1,16 +1,19 @@
 package com.mroldl001.mimochat.data.repository
 
 import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.mroldl001.mimochat.data.api.*
 import com.mroldl001.mimochat.data.local.ChatDao
 import com.mroldl001.mimochat.data.local.ChatEntity
 import com.mroldl001.mimochat.data.local.MessageDao
 import com.mroldl001.mimochat.data.local.MessageEntity
+import com.mroldl001.mimochat.data.preferences.PreferencesManager
 import com.mroldl001.mimochat.di.ApiServiceFactory
 import com.mroldl001.mimochat.domain.model.ApiErrorCode
 import com.mroldl001.mimochat.domain.model.Chat
 import com.mroldl001.mimochat.domain.model.Message
 import com.mroldl001.mimochat.domain.model.SearchResult
+import com.mroldl001.mimochat.domain.model.WebSearchResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -29,9 +32,11 @@ class ChatRepository @Inject constructor(
     private val messageDao: MessageDao,
     private val chatDao: ChatDao,
     private val apiServiceFactory: ApiServiceFactory,
-    private val okHttpClient: OkHttpClient
+    private val okHttpClient: OkHttpClient,
+    private val preferencesManager: PreferencesManager
 ) {
     private val gson = Gson()
+    private val searchResultsType = object : TypeToken<List<WebSearchResult>>() {}.type
     fun getAllChats(): Flow<List<Chat>> {
         return chatDao.getAllChats().map { entities ->
             entities.map { it.toDomain() }
@@ -116,17 +121,17 @@ class ChatRepository @Inject constructor(
         skillPrompt: String = "",
         customSystemPrompt: String = ""
     ): Result<Message> {
-        return try {
-            val request = buildRequest(modelId, messages, thinkingEnabled, stream = false, skillPrompt, customSystemPrompt)
+        try {
+            val chatRequest = buildRequest(modelId, messages, thinkingEnabled, stream = false, skillPrompt, customSystemPrompt)
 
             val apiService = apiServiceFactory.getService(baseUrl)
             val response = apiService.createChatCompletion(
                 apiKey = apiKey,
-                request = request
+                request = chatRequest
             )
 
             if (!response.isSuccessful) {
-                val errorBody = response.errorBody()?.string() ?: ""
+                val errorBody = response.errorBody()?.string() ?: "No error body"
                 return Result.failure(Exception("HTTP ${response.code()}: $errorBody"))
             }
 
@@ -143,9 +148,9 @@ class ChatRepository @Inject constructor(
                 reasoningContent = assistantMessage.reasoningContent
             )
 
-            Result.success(message)
+            return Result.success(message)
         } catch (e: Exception) {
-            Result.failure(Exception("发送失败：${e.message ?: "未知错误"}"))
+            return Result.failure(Exception("发送失败：${e.message ?: "未知错误"}"))
         }
     }
 
@@ -160,9 +165,8 @@ class ChatRepository @Inject constructor(
         customSystemPrompt: String = ""
     ): Flow<StreamEvent> = flow {
         try {
-            val requestBody = buildRequest(modelId, messages, thinkingEnabled, stream = true, skillPrompt, customSystemPrompt)
-            val json = Gson().toJson(requestBody)
-
+            val chatRequest = buildRequest(modelId, messages, thinkingEnabled, stream = true, skillPrompt, customSystemPrompt)
+            
             val normalizedBaseUrl = baseUrl.trimEnd('/')
             val endpoint = if (normalizedBaseUrl.endsWith("/v1")) {
                 "$normalizedBaseUrl/chat/completions"
@@ -170,23 +174,25 @@ class ChatRepository @Inject constructor(
                 "$normalizedBaseUrl/v1/chat/completions"
             }
 
-            val request = Request.Builder()
+            val json = Gson().toJson(chatRequest)
+            val httpRequest = Request.Builder()
                 .url(endpoint)
                 .addHeader("api-key", apiKey)
                 .addHeader("Content-Type", "application/json")
                 .post(json.toRequestBody("application/json".toMediaType()))
                 .build()
 
-            okHttpClient.newCall(request).execute().use { response ->
+            okHttpClient.newCall(httpRequest).execute().use { response ->
                 if (!response.isSuccessful) {
-                    emit(StreamEvent.Error(ApiErrorCode.getDisplayMessage(response.code)))
-                    return@use
+                    val errorBody = response.body?.string() ?: "No error body"
+                    emit(StreamEvent.Error("HTTP ${response.code}: $errorBody"))
+                    return@flow
                 }
 
                 val body = response.body
                 if (body == null) {
                     emit(StreamEvent.Error("响应体为空"))
-                    return@use
+                    return@flow
                 }
 
                 val source = body.source()
@@ -238,7 +244,7 @@ class ChatRepository @Inject constructor(
                                 ))
                             }
                         } catch (e: Exception) {
-                    }
+                        }
                     }
                 }
             }
@@ -315,7 +321,7 @@ class ChatRepository @Inject constructor(
         skillPrompt: String = "",
         customSystemPrompt: String = ""
     ): ChatCompletionRequest {
-        val thinking = if (thinkingEnabled) ThinkingConfig("enabled") else ThinkingConfig("disabled")
+        val effectiveThinking = if (thinkingEnabled) ThinkingConfig("enabled") else ThinkingConfig("disabled")
 
         val systemPromptParts = mutableListOf<String>()
 
@@ -362,7 +368,6 @@ class ChatRepository @Inject constructor(
         val requestMessages = mutableListOf<MessageRequest>()
         requestMessages.add(MessageRequest("system", fullSystemPrompt))
         
-        // 在多轮对话中保留 reasoning_content（根据小米文档建议）
         requestMessages.addAll(messages.map { message ->
             MessageRequest(
                 role = message.role,
@@ -379,9 +384,15 @@ class ChatRepository @Inject constructor(
             model = modelId,
             messages = requestMessages,
             stream = stream,
-            thinking = thinking,
-            temperature = 1.0,
-            maxCompletionTokens = 131072
+            thinking = effectiveThinking,
+            tools = null,
+            toolChoice = null,
+            temperature = preferencesManager.getTemperature().toDouble(),
+            topP = preferencesManager.getTopP().toDouble(),
+            maxCompletionTokens = 1024,
+            stop = null,
+            frequencyPenalty = preferencesManager.getFrequencyPenalty().toDouble(),
+            presencePenalty = preferencesManager.getPresencePenalty().toDouble()
         )
     }
 
@@ -407,6 +418,13 @@ class ChatRepository @Inject constructor(
         role = role,
         content = content,
         reasoningContent = reasoningContent,
+        searchResults = searchResultsJson?.let { json ->
+            try {
+                gson.fromJson(json, searchResultsType)
+            } catch (e: Exception) {
+                null
+            }
+        },
         timestamp = timestamp,
         isStreaming = isStreaming,
         isAborted = isAborted,
@@ -419,6 +437,7 @@ class ChatRepository @Inject constructor(
         role = role,
         content = content,
         reasoningContent = reasoningContent,
+        searchResultsJson = searchResults?.let { gson.toJson(it) },
         timestamp = timestamp,
         isStreaming = isStreaming,
         isAborted = isAborted,
@@ -429,6 +448,6 @@ class ChatRepository @Inject constructor(
 sealed class StreamEvent {
     data class ContentDelta(val delta: String, val accumulated: String) : StreamEvent()
     data class ReasoningDelta(val delta: String, val accumulated: String) : StreamEvent()
-    data class Done(val message: Message) : StreamEvent()
+    data class Done(val message: com.mroldl001.mimochat.domain.model.Message) : StreamEvent()
     data class Error(val message: String) : StreamEvent()
 }

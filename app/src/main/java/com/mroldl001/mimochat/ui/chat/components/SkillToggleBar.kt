@@ -48,6 +48,7 @@ fun SkillToggleBar(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically
     ) {
+
         SkillToggleChip(
             icon = Icons.Default.Psychology,
             label = "思考",

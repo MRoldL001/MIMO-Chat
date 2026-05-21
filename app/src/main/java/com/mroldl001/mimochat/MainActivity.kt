@@ -108,17 +108,15 @@ private fun MainContent(
 ) {
     var themeColor by remember { mutableStateOf(viewModel.preferencesManager.getThemeColor()) }
     var themeMode by remember { mutableStateOf(viewModel.preferencesManager.getThemeMode()) }
-    var isSearchOpen by remember { mutableStateOf(false) }
     var isDrawerOpen by remember { mutableStateOf(false) }
     var onBackToChat: (() -> Unit)? by remember { mutableStateOf(null) }
 
-    BackHandler(enabled = isSearchOpen || isDrawerOpen) {
-        isSearchOpen = false
+    BackHandler(enabled = isDrawerOpen) {
         isDrawerOpen = false
         onBackToChat?.invoke()
     }
     
-    val onNavigateFromSearch: () -> Unit = { isSearchOpen = false }
+    val onNavigateFromSearch: () -> Unit = { }
     val onNavigateFromDrawer: (Boolean) -> Unit = { isDrawerOpen = it }
     
     MIMOChatTheme(
@@ -134,9 +132,6 @@ private fun MainContent(
                 onThemeChanged = { newColor, newMode ->
                     themeColor = newColor
                     themeMode = newMode
-                },
-                onSearchStateChanged = { isOpen ->
-                    isSearchOpen = isOpen
                 },
                 onNavigateFromSearch = onNavigateFromSearch,
                 onNavigateFromDrawer = onNavigateFromDrawer,

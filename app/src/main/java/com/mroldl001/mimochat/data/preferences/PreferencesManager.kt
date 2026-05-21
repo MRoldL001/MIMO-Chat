@@ -21,7 +21,15 @@ class PreferencesManager @Inject constructor(
         private const val KEY_CUSTOM_SYSTEM_PROMPT = "custom_system_prompt"
         private const val KEY_SELECTED_MODEL_ID = "selected_model_id"
         private const val KEY_NOTIFICATION_PERMISSION_REQUESTED = "notification_permission_requested"
+        private const val KEY_TEMPERATURE = "temperature"
+        private const val KEY_TOP_P = "top_p"
+        private const val KEY_FREQUENCY_PENALTY = "frequency_penalty"
+        private const val KEY_PRESENCE_PENALTY = "presence_penalty"
         const val DEFAULT_API_BASE_URL = "https://api.xiaomimimo.com"
+        const val DEFAULT_TEMPERATURE = 0.8f
+        const val DEFAULT_TOP_P = 0.95f
+        const val DEFAULT_FREQUENCY_PENALTY = 0.0f
+        const val DEFAULT_PRESENCE_PENALTY = 0.0f
     }
 
     private val prefs: SharedPreferences by lazy {
@@ -92,5 +100,46 @@ class PreferencesManager @Inject constructor(
 
     fun setNotificationPermissionRequested(requested: Boolean) {
         prefs.edit().putBoolean(KEY_NOTIFICATION_PERMISSION_REQUESTED, requested).apply()
+    }
+
+    fun getTemperature(): Float {
+        return prefs.getFloat(KEY_TEMPERATURE, DEFAULT_TEMPERATURE)
+    }
+
+    fun saveTemperature(value: Float) {
+        prefs.edit().putFloat(KEY_TEMPERATURE, value).apply()
+    }
+
+    fun getTopP(): Float {
+        return prefs.getFloat(KEY_TOP_P, DEFAULT_TOP_P)
+    }
+
+    fun saveTopP(value: Float) {
+        prefs.edit().putFloat(KEY_TOP_P, value).apply()
+    }
+
+    fun getFrequencyPenalty(): Float {
+        return prefs.getFloat(KEY_FREQUENCY_PENALTY, DEFAULT_FREQUENCY_PENALTY)
+    }
+
+    fun saveFrequencyPenalty(value: Float) {
+        prefs.edit().putFloat(KEY_FREQUENCY_PENALTY, value).apply()
+    }
+
+    fun getPresencePenalty(): Float {
+        return prefs.getFloat(KEY_PRESENCE_PENALTY, DEFAULT_PRESENCE_PENALTY)
+    }
+
+    fun savePresencePenalty(value: Float) {
+        prefs.edit().putFloat(KEY_PRESENCE_PENALTY, value).apply()
+    }
+
+    fun resetParameters() {
+        prefs.edit()
+            .putFloat(KEY_TEMPERATURE, DEFAULT_TEMPERATURE)
+            .putFloat(KEY_TOP_P, DEFAULT_TOP_P)
+            .putFloat(KEY_FREQUENCY_PENALTY, DEFAULT_FREQUENCY_PENALTY)
+            .putFloat(KEY_PRESENCE_PENALTY, DEFAULT_PRESENCE_PENALTY)
+            .apply()
     }
 }

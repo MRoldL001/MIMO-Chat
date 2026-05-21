@@ -8,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -28,6 +29,8 @@ import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.ChatBubble
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -65,7 +68,6 @@ fun ChatScreen(
     onNavigateToSearch: () -> Unit = {},
     onNavigateToChat: (Long) -> Unit = {},
     onThemeChanged: (ThemeColor, ThemeMode) -> Unit = { _, _ -> },
-    onSearchStateChanged: (Boolean) -> Unit = {},
     onNavigateFromDrawer: (Boolean) -> Unit = {},
     initialChatId: Long? = null
 ) {
@@ -81,6 +83,7 @@ fun ChatScreen(
     var showApiKeyDialog by remember { mutableStateOf(false) }
     var showApiBaseUrlDialog by remember { mutableStateOf(false) }
     var showCustomPromptDialog by remember { mutableStateOf(false) }
+    var showParameterSettingsDialog by remember { mutableStateOf(false) }
 
     if (isExpandedScreen) {
         AdaptiveChatLayout(
@@ -129,12 +132,28 @@ fun ChatScreen(
             onCustomPromptSaved = { prompt ->
                 viewModel.setCustomSystemPrompt(prompt)
             },
+            onTemperatureSaved = { temp ->
+                viewModel.setTemperature(temp)
+            },
+            onTopPSaved = { topP ->
+                viewModel.setTopP(topP)
+            },
+            onFrequencyPenaltySaved = { freqPenalty ->
+                viewModel.setFrequencyPenalty(freqPenalty)
+            },
+            onPresencePenaltySaved = { presPenalty ->
+                viewModel.setPresencePenalty(presPenalty)
+            },
+            onResetParameters = {
+                viewModel.resetParameters()
+            },
             onClearError = { viewModel.clearError() }
         )
         return
     }
 
     var showSettingsDialog by remember { mutableStateOf(false) }
+    var showAdvancedSettingsDialog by remember { mutableStateOf(false) }
     var showApiKeyWarningDialog by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     
@@ -342,9 +361,9 @@ fun ChatScreen(
                         if (isStreaming) {
                             item {
                                 StreamingMessageBubble(
-                                    content = streamingContent,
-                                    reasoningContent = streamingReasoning
-                                )
+                                content = streamingContent,
+                                reasoningContent = streamingReasoning
+                            )
                             }
                         }
                     }
@@ -428,15 +447,50 @@ fun ChatScreen(
                 showSettingsDialog = false
                 showApiKeyDialog = true
             },
-            onApiBaseUrlClick = {
+            onAdvancedSettingsClick = {
                 showSettingsDialog = false
-                showApiBaseUrlDialog = true
+                showAdvancedSettingsDialog = true
             },
             onCustomPromptClick = {
                 showSettingsDialog = false
                 showCustomPromptDialog = true
             },
             onDismiss = { showSettingsDialog = false }
+        )
+    }
+
+    if (showAdvancedSettingsDialog) {
+        AdvancedSettingsDialog(
+            onApiBaseUrlClick = {
+                showAdvancedSettingsDialog = false
+                showApiBaseUrlDialog = true
+            },
+            onParameterSettingsClick = {
+                showAdvancedSettingsDialog = false
+                showParameterSettingsDialog = true
+            },
+            onDismiss = { showAdvancedSettingsDialog = false }
+        )
+    }
+
+    if (showParameterSettingsDialog) {
+        ParameterSettingsDialog(
+            initialTemperature = uiState.temperature,
+            initialTopP = uiState.topP,
+            initialFrequencyPenalty = uiState.frequencyPenalty,
+            initialPresencePenalty = uiState.presencePenalty,
+            onDismiss = { showParameterSettingsDialog = false },
+            onConfirm = { temp, topP, freqPenalty, presPenalty ->
+                viewModel.setTemperature(temp)
+                viewModel.setTopP(topP)
+                viewModel.setFrequencyPenalty(freqPenalty)
+                viewModel.setPresencePenalty(presPenalty)
+                showParameterSettingsDialog = false
+            },
+            onReset = {
+                viewModel.resetParameters()
+                showParameterSettingsDialog = false
+            }
         )
     }
 
@@ -586,11 +640,11 @@ private fun ApiKeyDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("设置 API Key") },
+        title = { Text("API Key") },
         text = {
             Column {
                 Text(
-                    text = "请输入您的小米 MiMo API Key",
+                    text = "月度套餐用户请在高级设置内将 API Base URL 改为订阅接口",
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Spacer(modifier = Modifier.height(16.dp))
@@ -614,7 +668,12 @@ private fun ApiKeyDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(
+                onClick = onDismiss,
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            ) {
                 Text("取消")
             }
         }
@@ -631,7 +690,7 @@ private fun ApiBaseUrlDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("设置 API Base URL") },
+        title = { Text("API Base URL") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
@@ -679,7 +738,12 @@ private fun ApiBaseUrlDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(
+                onClick = onDismiss,
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            ) {
                 Text("取消")
             }
         }
@@ -722,8 +786,571 @@ private fun CustomSystemPromptDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(
+                onClick = onDismiss,
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            ) {
                 Text("取消")
+            }
+        }
+    )
+}
+
+@Composable
+private fun ParameterSettingsDialog(
+    initialTemperature: Float,
+    initialTopP: Float,
+    initialFrequencyPenalty: Float,
+    initialPresencePenalty: Float,
+    onDismiss: () -> Unit,
+    onConfirm: (Float, Float, Float, Float) -> Unit,
+    onReset: () -> Unit
+) {
+    var temperature by remember { mutableStateOf(initialTemperature) }
+    var topP by remember { mutableStateOf(initialTopP) }
+    var frequencyPenalty by remember { mutableStateOf(initialFrequencyPenalty) }
+    var presencePenalty by remember { mutableStateOf(initialPresencePenalty) }
+    var temperatureText by remember { mutableStateOf(initialTemperature.toString()) }
+    var topPText by remember { mutableStateOf(initialTopP.toString()) }
+    var frequencyPenaltyText by remember { mutableStateOf(initialFrequencyPenalty.toString()) }
+    var presencePenaltyText by remember { mutableStateOf(initialPresencePenalty.toString()) }
+    var temperatureError by remember { mutableStateOf(false) }
+    var topPError by remember { mutableStateOf(false) }
+    var frequencyPenaltyError by remember { mutableStateOf(false) }
+    var presencePenaltyError by remember { mutableStateOf(false) }
+    var showResetConfirmDialog by remember { mutableStateOf(false) }
+
+    fun validateTemperature(value: String): Float? {
+        return try {
+            val num = value.toFloat()
+            if (num in 0f..2f) {
+                temperatureError = false
+                num
+            } else {
+                temperatureError = true
+                null
+            }
+        } catch (e: NumberFormatException) {
+            temperatureError = true
+            null
+        }
+    }
+
+    fun validateTopP(value: String): Float? {
+        return try {
+            val num = value.toFloat()
+            if (num in 0f..1f) {
+                topPError = false
+                num
+            } else {
+                topPError = true
+                null
+            }
+        } catch (e: NumberFormatException) {
+            topPError = true
+            null
+        }
+    }
+
+    fun validateFrequencyPenalty(value: String): Float? {
+        return try {
+            val num = value.toFloat()
+            if (num in -2f..2f) {
+                frequencyPenaltyError = false
+                num
+            } else {
+                frequencyPenaltyError = true
+                null
+            }
+        } catch (e: NumberFormatException) {
+            frequencyPenaltyError = true
+            null
+        }
+    }
+
+    fun validatePresencePenalty(value: String): Float? {
+        return try {
+            val num = value.toFloat()
+            if (num in -2f..2f) {
+                presencePenaltyError = false
+                num
+            } else {
+                presencePenaltyError = true
+                null
+            }
+        } catch (e: NumberFormatException) {
+            presencePenaltyError = true
+            null
+        }
+    }
+
+    if (showResetConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showResetConfirmDialog = false },
+            title = {
+                Text(
+                    text = "恢复默认",
+                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.primary
+                )
+            },
+            text = {
+                Text(
+                    text = "你真的要恢复默认参数吗？",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showResetConfirmDialog = false
+                        onReset()
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Text("确认")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showResetConfirmDialog = false },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                ) {
+                    Text("取消")
+                }
+            },
+            containerColor = MaterialTheme.colorScheme.surface,
+            titleContentColor = MaterialTheme.colorScheme.onSurface,
+            textContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("参数设置") },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(20.dp),
+                modifier = Modifier.verticalScroll(rememberScrollState())
+            ) {
+                // Temperature
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Temperature",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        val tempInteractionSource = remember { MutableInteractionSource() }
+                        Box(
+                            modifier = Modifier
+                                .clip(MaterialTheme.shapes.small)
+                                .clickable(
+                                    interactionSource = tempInteractionSource,
+                                    indication = null,
+                                    onClick = { }
+                                )
+                                .padding(4.dp)
+                        ) {
+                            OutlinedTextField(
+                                value = temperatureText,
+                                onValueChange = { newValue ->
+                                    temperatureText = newValue
+                                    validateTemperature(newValue)?.let {
+                                        temperature = it
+                                    }
+                                },
+                                singleLine = true,
+                                isError = temperatureError,
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                modifier = Modifier.width(100.dp)
+                            )
+                        }
+                    }
+                    if (temperatureError) {
+                        Text(
+                            text = "请输入 0 到 2.0 之间的数值",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                    Slider(
+                        value = temperature,
+                        onValueChange = { 
+                            temperature = it
+                            temperatureText = String.format("%.2f", it)
+                            temperatureError = false
+                        },
+                        valueRange = 0f..2f,
+                        colors = androidx.compose.material3.SliderDefaults.colors(
+                            thumbColor = MaterialTheme.colorScheme.primary,
+                            activeTrackColor = MaterialTheme.colorScheme.primary,
+                            activeTickColor = MaterialTheme.colorScheme.onPrimary,
+                            inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant,
+                            inactiveTickColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Text(
+                        text = "控制模型输出的随机性。值为 0 时输出接近确定性结果，值越高则输出越具创意和多样性",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                // Top P
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Top P",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        val topPInteractionSource = remember { MutableInteractionSource() }
+                        Box(
+                            modifier = Modifier
+                                .clip(MaterialTheme.shapes.small)
+                                .clickable(
+                                    interactionSource = topPInteractionSource,
+                                    indication = null,
+                                    onClick = { }
+                                )
+                                .padding(4.dp)
+                        ) {
+                            OutlinedTextField(
+                                value = topPText,
+                                onValueChange = { newValue ->
+                                    topPText = newValue
+                                    validateTopP(newValue)?.let {
+                                        topP = it
+                                    }
+                                },
+                                singleLine = true,
+                                isError = topPError,
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                modifier = Modifier.width(100.dp)
+                            )
+                        }
+                    }
+                    if (topPError) {
+                        Text(
+                            text = "请输入 0.0 到 1.0 之间的数值",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                    Slider(
+                        value = topP,
+                        onValueChange = { 
+                            topP = it
+                            topPText = String.format("%.2f", it)
+                            topPError = false
+                        },
+                        valueRange = 0f..1f,
+                        colors = androidx.compose.material3.SliderDefaults.colors(
+                            thumbColor = MaterialTheme.colorScheme.primary,
+                            activeTrackColor = MaterialTheme.colorScheme.primary,
+                            activeTickColor = MaterialTheme.colorScheme.onPrimary,
+                            inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant,
+                            inactiveTickColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Text(
+                        text = "也称为核采样。模型会从累积概率达到 top_p 的最小 Token 集合中进行采样。一般建议只调整 temperature 或 top_p 其中之一",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                // Frequency Penalty
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Frequency Penalty",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        val freqPenaltyInteractionSource = remember { MutableInteractionSource() }
+                        Box(
+                            modifier = Modifier
+                                .clip(MaterialTheme.shapes.small)
+                                .clickable(
+                                    interactionSource = freqPenaltyInteractionSource,
+                                    indication = null,
+                                    onClick = { }
+                                )
+                                .padding(4.dp)
+                        ) {
+                            OutlinedTextField(
+                                value = frequencyPenaltyText,
+                                onValueChange = { newValue ->
+                                    frequencyPenaltyText = newValue
+                                    validateFrequencyPenalty(newValue)?.let {
+                                        frequencyPenalty = it
+                                    }
+                                },
+                                singleLine = true,
+                                isError = frequencyPenaltyError,
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                modifier = Modifier.width(100.dp)
+                            )
+                        }
+                    }
+                    if (frequencyPenaltyError) {
+                        Text(
+                            text = "请输入 -2.0 到 2.0 之间的数值",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                    Slider(
+                        value = frequencyPenalty,
+                        onValueChange = { 
+                            frequencyPenalty = it
+                            frequencyPenaltyText = String.format("%.2f", it)
+                            frequencyPenaltyError = false
+                        },
+                        valueRange = -2f..2f,
+                        colors = androidx.compose.material3.SliderDefaults.colors(
+                            thumbColor = MaterialTheme.colorScheme.primary,
+                            activeTrackColor = MaterialTheme.colorScheme.primary,
+                            activeTickColor = MaterialTheme.colorScheme.onPrimary,
+                            inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant,
+                            inactiveTickColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Text(
+                        text = "根据 Token 在已生成文本中出现的频率进行惩罚。正值可以减少重复",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                // Presence Penalty
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Presence Penalty",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        val presPenaltyInteractionSource = remember { MutableInteractionSource() }
+                        Box(
+                            modifier = Modifier
+                                .clip(MaterialTheme.shapes.small)
+                                .clickable(
+                                    interactionSource = presPenaltyInteractionSource,
+                                    indication = null,
+                                    onClick = { }
+                                )
+                                .padding(4.dp)
+                        ) {
+                            OutlinedTextField(
+                                value = presencePenaltyText,
+                                onValueChange = { newValue ->
+                                    presencePenaltyText = newValue
+                                    validatePresencePenalty(newValue)?.let {
+                                        presencePenalty = it
+                                    }
+                                },
+                                singleLine = true,
+                                isError = presencePenaltyError,
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                modifier = Modifier.width(100.dp)
+                            )
+                        }
+                    }
+                    if (presencePenaltyError) {
+                        Text(
+                            text = "请输入 -2.0 到 2.0 之间的数值",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                    Slider(
+                        value = presencePenalty,
+                        onValueChange = { 
+                            presencePenalty = it
+                            presencePenaltyText = String.format("%.2f", it)
+                            presencePenaltyError = false
+                        },
+                        valueRange = -2f..2f,
+                        colors = androidx.compose.material3.SliderDefaults.colors(
+                            thumbColor = MaterialTheme.colorScheme.primary,
+                            activeTrackColor = MaterialTheme.colorScheme.primary,
+                            activeTickColor = MaterialTheme.colorScheme.onPrimary,
+                            inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant,
+                            inactiveTickColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Text(
+                        text = "根据 Token 是否已在生成的文本中出现过进行惩罚，不考虑出现频率。正值鼓励模型引入新话题",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { 
+                    val validatedTemp = validateTemperature(temperatureText)
+                    val validatedTopP = validateTopP(topPText)
+                    val validatedFreqPenalty = validateFrequencyPenalty(frequencyPenaltyText)
+                    val validatedPresPenalty = validatePresencePenalty(presencePenaltyText)
+                    if (validatedTemp != null && validatedTopP != null && validatedFreqPenalty != null && validatedPresPenalty != null) {
+                        onConfirm(validatedTemp, validatedTopP, validatedFreqPenalty, validatedPresPenalty)
+                    }
+                },
+                enabled = !temperatureError && !topPError && !frequencyPenaltyError && !presencePenaltyError
+            ) {
+                Text("确认")
+            }
+        },
+        dismissButton = {
+            Row {
+                TextButton(
+                    onClick = onDismiss,
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                ) {
+                    Text("取消")
+                }
+                TextButton(
+                    onClick = { showResetConfirmDialog = true }
+                ) {
+                    Text("恢复默认")
+                }
+            }
+        }
+    )
+}
+
+@Composable
+private fun AdvancedSettingsDialog(
+    onApiBaseUrlClick: () -> Unit,
+    onParameterSettingsClick: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("高级设置") },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // 参数设置
+                val paramInteractionSource = remember { MutableInteractionSource() }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(
+                            interactionSource = paramInteractionSource,
+                            indication = null,
+                            onClick = onParameterSettingsClick
+                        )
+                        .padding(vertical = 12.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Tune,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column {
+                        Text(
+                            text = "参数设置",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "调整 Temperature 和 Top P",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                // API Base URL
+                val apiUrlInteractionSource = remember { MutableInteractionSource() }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(
+                            interactionSource = apiUrlInteractionSource,
+                            indication = null,
+                            onClick = onApiBaseUrlClick
+                        )
+                        .padding(vertical = 12.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Link,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column {
+                        Text(
+                            text = "API Base URL",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "配置 API 服务器地址",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("关闭")
             }
         }
     )
@@ -735,7 +1362,7 @@ private fun SettingsDialog(
     initialThemeMode: ThemeMode,
     onApply: (ThemeColor, ThemeMode) -> Unit,
     onApiKeyClick: () -> Unit,
-    onApiBaseUrlClick: () -> Unit,
+    onAdvancedSettingsClick: () -> Unit,
     onCustomPromptClick: () -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -929,54 +1556,12 @@ private fun SettingsDialog(
                     Spacer(modifier = Modifier.width(16.dp))
                     Column {
                         Text(
-                            text = "设置 API Key",
+                            text = "API Key",
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             text = "配置您的 API 密钥以使用服务",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                // API Base URL
-                val apiUrlInteractionSource = remember { MutableInteractionSource() }
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(
-                            interactionSource = apiUrlInteractionSource,
-                            indication = null,
-                            onClick = onApiBaseUrlClick
-                        )
-                        .padding(vertical = 12.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Link,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Column {
-                        Text(
-                            text = "设置 API Base URL",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = "配置 API 服务器地址",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -1024,6 +1609,48 @@ private fun SettingsDialog(
                         )
                     }
                 }
+
+                // 更多设置项
+                val advancedSettingsInteractionSource = remember { MutableInteractionSource() }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(
+                            interactionSource = advancedSettingsInteractionSource,
+                            indication = null,
+                            onClick = onAdvancedSettingsClick
+                        )
+                        .padding(vertical = 12.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column {
+                        Text(
+                            text = "更多设置项",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "更多高级选项",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
         },
         confirmButton = {
@@ -1032,7 +1659,12 @@ private fun SettingsDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(
+                onClick = onDismiss,
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            ) {
                 Text("取消")
             }
         }

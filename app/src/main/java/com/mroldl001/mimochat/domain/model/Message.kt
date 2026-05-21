@@ -6,6 +6,7 @@ data class Message(
     val role: String,
     val content: String,
     val reasoningContent: String? = null,
+    val searchResults: List<WebSearchResult>? = null,
     val timestamp: Long = System.currentTimeMillis(),
     val isStreaming: Boolean = false,
     val isAborted: Boolean = false,

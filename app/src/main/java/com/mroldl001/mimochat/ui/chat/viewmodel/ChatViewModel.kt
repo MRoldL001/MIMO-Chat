@@ -79,6 +79,7 @@ object SkillPrompts {
 data class StreamState(
     val content: String = "",
     val reasoning: String = "",
+    val searchResults: List<com.mroldl001.mimochat.domain.model.WebSearchResult>? = null,
     val isActive: Boolean = false
 )
 
@@ -94,7 +95,11 @@ data class ChatUiState(
     val themeColor: ThemeColor = ThemeColor.WHITE,
     val themeMode: ThemeMode = ThemeMode.FOLLOW_SYSTEM,
     val customSystemPrompt: String = "",
-    val activeSkill: SkillType? = null
+    val activeSkill: SkillType? = null,
+    val temperature: Float = PreferencesManager.DEFAULT_TEMPERATURE,
+    val topP: Float = PreferencesManager.DEFAULT_TOP_P,
+    val frequencyPenalty: Float = PreferencesManager.DEFAULT_FREQUENCY_PENALTY,
+    val presencePenalty: Float = PreferencesManager.DEFAULT_PRESENCE_PENALTY
 )
 
 private const val DEFAULT_CHAT_TITLE = "新对话"
@@ -113,7 +118,11 @@ class ChatViewModel @Inject constructor(
             themeMode = preferencesManager.getThemeMode(),
             apiKey = preferencesManager.getApiKey(),
             apiBaseUrl = preferencesManager.getApiBaseUrl(),
-            customSystemPrompt = preferencesManager.getCustomSystemPrompt()
+            customSystemPrompt = preferencesManager.getCustomSystemPrompt(),
+            temperature = preferencesManager.getTemperature(),
+            topP = preferencesManager.getTopP(),
+            frequencyPenalty = preferencesManager.getFrequencyPenalty(),
+            presencePenalty = preferencesManager.getPresencePenalty()
         )
     )
     val uiState: StateFlow<ChatUiState> = _uiState.asStateFlow()
@@ -187,9 +196,43 @@ class ChatViewModel @Inject constructor(
         preferencesManager.saveCustomSystemPrompt(prompt)
     }
 
+    fun setTemperature(value: Float) {
+        _uiState.update { it.copy(temperature = value) }
+        preferencesManager.saveTemperature(value)
+    }
+
+    fun setTopP(value: Float) {
+        _uiState.update { it.copy(topP = value) }
+        preferencesManager.saveTopP(value)
+    }
+
+    fun setFrequencyPenalty(value: Float) {
+        _uiState.update { it.copy(frequencyPenalty = value) }
+        preferencesManager.saveFrequencyPenalty(value)
+    }
+
+    fun setPresencePenalty(value: Float) {
+        _uiState.update { it.copy(presencePenalty = value) }
+        preferencesManager.savePresencePenalty(value)
+    }
+
+    fun resetParameters() {
+        preferencesManager.resetParameters()
+        _uiState.update { 
+            it.copy(
+                temperature = PreferencesManager.DEFAULT_TEMPERATURE,
+                topP = PreferencesManager.DEFAULT_TOP_P,
+                frequencyPenalty = PreferencesManager.DEFAULT_FREQUENCY_PENALTY,
+                presencePenalty = PreferencesManager.DEFAULT_PRESENCE_PENALTY
+            )
+        }
+    }
+
     fun setActiveSkill(skill: SkillType?) {
         _uiState.update { it.copy(activeSkill = skill) }
     }
+
+
 
     fun selectModel(model: AIModel) {
         _uiState.update { it.copy(selectedModel = model) }
@@ -247,6 +290,7 @@ class ChatViewModel @Inject constructor(
             chatStreamStates[currentId] = StreamState(
                 content = streamingContent.value,
                 reasoning = streamingReasoning.value,
+                searchResults = null,
                 isActive = activeStreams.contains(currentId)
             )
         }
@@ -435,6 +479,8 @@ class ChatViewModel @Inject constructor(
                 var reasoningPhase = true
                 var currentContent = ""
                 var currentReasoning = ""
+                var lastNotificationUpdate = 0L
+                val notificationUpdateInterval = 500L // 每 500ms 最多更新一次通知
 
                 while (!isStreamDone || contentBuffer.isNotEmpty() || reasoningBuffer.isNotEmpty()) {
                     var consumed = false
@@ -462,8 +508,28 @@ class ChatViewModel @Inject constructor(
                     chatStreamStates[targetChatId] = StreamState(
                         content = currentContent,
                         reasoning = currentReasoning,
+                        searchResults = null,
                         isActive = !isStreamDone
                     )
+
+                    // 更新通知
+                    val now = System.currentTimeMillis()
+                    if (now - lastNotificationUpdate > notificationUpdateInterval) {
+                        val displayText = when {
+                            reasoningPhase && currentReasoning.isNotBlank() -> "正在思考..."
+                            currentContent.isNotBlank() -> {
+                                val preview = currentContent.take(30)
+                                if (currentContent.length > 30) "$preview..." else preview
+                            }
+                            else -> "MiMo正在回复你"
+                        }
+                        val updateIntent = Intent(application, ChatService::class.java).apply {
+                            action = ChatService.ACTION_UPDATE_NOTIFICATION
+                            putExtra(ChatService.EXTRA_NOTIFICATION_TEXT, displayText)
+                        }
+                        application.startService(updateIntent)
+                        lastNotificationUpdate = now
+                    }
 
                     if (consumed) {
                         delay(8)
@@ -480,6 +546,7 @@ class ChatViewModel @Inject constructor(
                 chatStreamStates[targetChatId] = StreamState(
                     content = currentContent,
                     reasoning = currentReasoning,
+                    searchResults = null,
                     isActive = false
                 )
 
@@ -546,7 +613,7 @@ class ChatViewModel @Inject constructor(
         val chatId = _uiState.value.currentChat?.id ?: 0
 
         chatId.takeIf { it > 0 }?.let {
-            chatStreamStates[it] = StreamState(content, reasoning, false)
+            chatStreamStates[it] = StreamState(content, reasoning, null, false)
         }
 
         val lastUserIndex = messages.indexOfLast { it.role == "user" }

@@ -86,7 +86,7 @@ fun ModelSelector(
     }
 
                 LazyColumn(
-                    modifier = Modifier.height(250.dp)
+                    modifier = Modifier.height(350.dp)
                 ) {
                     items(models, key = { it.id }) { model ->
                         ModelItem(
