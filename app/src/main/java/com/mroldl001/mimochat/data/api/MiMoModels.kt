@@ -21,7 +21,9 @@ data class ChatCompletionRequest(
 
 data class MessageRequest(
     val role: String,
-    val content: String
+    val content: String,
+    @SerializedName("reasoning_content")
+    val reasoningContent: String? = null
 )
 
 data class ThinkingConfig(

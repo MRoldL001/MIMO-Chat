@@ -361,7 +361,19 @@ class ChatRepository @Inject constructor(
 
         val requestMessages = mutableListOf<MessageRequest>()
         requestMessages.add(MessageRequest("system", fullSystemPrompt))
-        requestMessages.addAll(messages.map { MessageRequest(it.role, it.content) })
+        
+        // 在多轮对话中保留 reasoning_content（根据小米文档建议）
+        requestMessages.addAll(messages.map { message ->
+            MessageRequest(
+                role = message.role,
+                content = message.content,
+                reasoningContent = if (message.role == "assistant" && !message.reasoningContent.isNullOrBlank()) {
+                    message.reasoningContent
+                } else {
+                    null
+                }
+            )
+        })
 
         return ChatCompletionRequest(
             model = modelId,

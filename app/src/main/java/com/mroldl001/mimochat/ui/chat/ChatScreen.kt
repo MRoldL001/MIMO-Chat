@@ -751,7 +751,7 @@ private fun SettingsDialog(
     
     val themeColorNames = mapOf(
         ThemeColor.WHITE to "默认",
-        ThemeColor.AUTO_COLOR to "动态色彩",
+        ThemeColor.AUTO_COLOR to "莫奈取色",
         ThemeColor.HATSUNE_MIKU to "初音绿",
         ThemeColor.MI_ORANGE to "小米橙",
         ThemeColor.GREEN to "盎然绿",

@@ -20,6 +20,7 @@ class PreferencesManager @Inject constructor(
         private const val KEY_API_BASE_URL = "api_base_url"
         private const val KEY_CUSTOM_SYSTEM_PROMPT = "custom_system_prompt"
         private const val KEY_SELECTED_MODEL_ID = "selected_model_id"
+        private const val KEY_NOTIFICATION_PERMISSION_REQUESTED = "notification_permission_requested"
         const val DEFAULT_API_BASE_URL = "https://api.xiaomimimo.com"
     }
 
@@ -83,5 +84,13 @@ class PreferencesManager @Inject constructor(
 
     fun saveSelectedModelId(modelId: String) {
         prefs.edit().putString(KEY_SELECTED_MODEL_ID, modelId).apply()
+    }
+
+    fun hasRequestedNotificationPermission(): Boolean {
+        return prefs.getBoolean(KEY_NOTIFICATION_PERMISSION_REQUESTED, false)
+    }
+
+    fun setNotificationPermissionRequested(requested: Boolean) {
+        prefs.edit().putBoolean(KEY_NOTIFICATION_PERMISSION_REQUESTED, requested).apply()
     }
 }
