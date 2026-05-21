@@ -29,10 +29,10 @@ MIMO Chat - 第三方小米 MiMo 大模型 Android 客户端
 > 
 > 部分厂商定制系统会限制非应用商店下载应用的通知权限。为保障服务的稳定性，请自行前往设置中**确认已开启本应用的通知权限**，本应用不会自行弹窗提醒用户开启通知，以尊重用户的选择权。
 
-![Kotlin](https://img.shields.io/badge/Kotlin-1.9.0-7F52FF?style=flat-square&logo=kotlin&logoColor=white)
-![Gradle](https://img.shields.io/badge/Gradle-8.2.0-02303A?style=flat-square&logo=gradle&logoColor=white)
-![Compose BOM](https://img.shields.io/badge/Compose%20BOM-2023.08.00-4285F4?style=flat-square&logo=jetpackcompose&logoColor=white)
-![Target API](https://img.shields.io/badge/Target%20API-34%20%28Android%2014%29-3DDC84?style=flat-square&logo=android&logoColor=white)
+![Kotlin](https://img.shields.io/badge/Kotlin-2.0.20-7F52FF?style=flat-square&logo=kotlin&logoColor=white)
+![Gradle](https://img.shields.io/badge/Gradle-8.13.0-02303A?style=flat-square&logo=gradle&logoColor=white)
+![Compose BOM](https://img.shields.io/badge/Compose%20BOM-2024.12.01-4285F4?style=flat-square&logo=jetpackcompose&logoColor=white)
+![Target API](https://img.shields.io/badge/Target%20API-36%20%28Android%2016%29-3DDC84?style=flat-square&logo=android&logoColor=white)
 
 ---
 
